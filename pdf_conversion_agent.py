@@ -4,7 +4,7 @@ from pdfminer.layout import LAParams, LTTextBox, LTImage
 from pdfminer.pdfpage import PDFPage
 from pdfminer.pdfinterp import PDFResourceManager, PDFPageInterpreter
 from pdfminer.converter import PDFPageAggregator
-import openai
+from openai import OpenAI
 import argparse
 import os
 import io
@@ -153,11 +153,9 @@ def main():
         # Call OpenAI API
         print("\nCalling OpenAI API...")
         try:
-            openai.api_key = os.environ.get("OPENAI_API_KEY")
-            if not openai.api_key:
-                raise ValueError("OPENAI_API_KEY environment variable not set")
+            client = OpenAI()
             
-            response = openai.ChatCompletion.create(
+            response = client.chat.completions.create(
                 model="gpt-3.5-turbo",
                 messages=[
                     {"role": "system", "content": "You are an AI assistant specialized in analyzing documents for 508 compliance."},
