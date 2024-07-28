@@ -9,6 +9,7 @@ import argparse
 import os
 import io
 import re
+import requests
 
 def extract_pdf_text(pdf_path):
     """
@@ -146,6 +147,38 @@ def prepare_content_for_gpt(pdf_path):
         print(f"Error preparing content for GPT: {e}")
         return None
 
+def call_gpt4o_mini_api(content):
+    """
+    Call the GPT-4o-mini API with the prepared content.
+    
+    :param content: Prepared content string
+    :return: API response as a string
+    """
+    try:
+        # Replace with actual API endpoint and key
+        api_endpoint = "https://api.gpt4o-mini.example.com/analyze"
+        api_key = os.environ.get("GPT4O_MINI_API_KEY")
+        
+        if not api_key:
+            raise ValueError("GPT4O_MINI_API_KEY environment variable not set")
+        
+        headers = {
+            "Authorization": f"Bearer {api_key}",
+            "Content-Type": "application/json"
+        }
+        
+        data = {
+            "content": content
+        }
+        
+        response = requests.post(api_endpoint, headers=headers, json=data)
+        response.raise_for_status()
+        
+        return response.json()["analysis"]
+    except Exception as e:
+        print(f"Error calling GPT-4o-mini API: {e}")
+        return None
+
 def main():
     parser = argparse.ArgumentParser(description="508 Compliant PDF Conversion Agent")
     parser.add_argument("input", help="Path to the input PDF file")
@@ -179,6 +212,16 @@ def main():
         print("Content prepared successfully.")
         if args.verbose:
             print(f"Prepared content preview: {gpt_content[:200]}...")
+        
+        # Call GPT-4o-mini API
+        print("\nCalling GPT-4o-mini API...")
+        api_response = call_gpt4o_mini_api(gpt_content)
+        if api_response:
+            print("GPT-4o-mini analysis completed successfully.")
+            if args.verbose:
+                print(f"API response preview: {api_response[:200]}...")
+        else:
+            print("Failed to get analysis from GPT-4o-mini API.")
     else:
         print("Failed to prepare content for GPT-4o-mini.")
 
