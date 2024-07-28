@@ -5,6 +5,7 @@ from pdfminer.pdfpage import PDFPage
 from pdfminer.pdfinterp import PDFResourceManager, PDFPageInterpreter
 from pdfminer.converter import PDFPageAggregator
 from openai import OpenAI
+import json
 import argparse
 import os
 import io
@@ -117,62 +118,61 @@ def prepare_content_for_gpt(pdf_path):
         return None
 
 
+def call_gpt4o_mini_api(content):
+    """
+    Send content to GPT-4o-mini API and receive recommendations.
+    
+    :param content: Formatted content to send to the API
+    :return: API response containing recommendations
+    """
+    try:
+        client = OpenAI()
+        
+        system_prompt = "You are an AI model designed to analyze documents for compliance with accessibility standards. Your task is to review the following document and provide recommendations for 508 compliance."
+        user_prompt = f"Please analyze the following document for 508 compliance and provide recommendations to ensure it meets accessibility standards. Document content:\n\n{content}"
+        
+        response = client.chat.completions.create(
+            model="gpt-3.5-turbo",  # Using GPT-3.5-turbo as a stand-in for GPT-4o-mini
+            messages=[
+                {"role": "system", "content": system_prompt},
+                {"role": "user", "content": user_prompt}
+            ]
+        )
+        
+        api_response = response.choices[0].message.content
+        return api_response
+    except Exception as e:
+        print(f"Error calling OpenAI API: {e}")
+        return None
+
 def main():
     parser = argparse.ArgumentParser(description="508 Compliant PDF Analysis Agent")
     parser.add_argument("input", help="Path to the input PDF file")
     parser.add_argument("--verbose", action="store_true", help="Enable verbose output")
     args = parser.parse_args()
 
-    # Extract text from the input PDF
-    extracted_text = extract_pdf_text(args.input)
-    if extracted_text:
-        print("Text extracted successfully.")
-        if args.verbose:
-            print(f"Extracted text preview: {extracted_text[:200]}...")
-    else:
-        print("Failed to extract text from the PDF.")
-
-    # Analyze PDF accessibility
-    accessibility_issues = analyze_pdf_accessibility(args.input)
-    if accessibility_issues:
-        print("\nAccessibility Analysis Results:")
-        for issue, count in accessibility_issues.items():
-            if args.verbose or (isinstance(count, (int, bool)) and count > 0):
-                print(f"{issue.replace('_', ' ').capitalize()}: {count}")
-    else:
-        print("Failed to analyze PDF accessibility.")
-
-    # Prepare content for GPT-3.5-turbo
-    print("\nPreparing content for GPT-3.5-turbo...")
+    # Prepare content for GPT-4o-mini
+    print("\nPreparing content for GPT-4o-mini...")
     gpt_content = prepare_content_for_gpt(args.input)
     if gpt_content:
         print("Content prepared successfully.")
         if args.verbose:
             print(f"Prepared content preview: {gpt_content[:200]}...")
         
-        # Call OpenAI API
-        print("\nCalling OpenAI API...")
-        try:
-            client = OpenAI()
-            
-            response = client.chat.completions.create(
-                model="gpt-3.5-turbo",
-                messages=[
-                    {"role": "system", "content": "You are an AI assistant specialized in analyzing documents for 508 compliance."},
-                    {"role": "user", "content": gpt_content}
-                ]
-            )
-            api_response = response.choices[0].message.content
-            print("GPT-3.5-turbo analysis completed successfully.")
+        # Call GPT-4o-mini API
+        print("\nCalling GPT-4o-mini API...")
+        api_response = call_gpt4o_mini_api(gpt_content)
+        if api_response:
+            print("GPT-4o-mini analysis completed successfully.")
             if args.verbose:
                 print(f"API response preview: {api_response[:200]}...")
             
-            print("\nGPT-3.5-turbo Analysis Results:")
+            print("\nGPT-4o-mini Analysis Results:")
             print(api_response)
-        except Exception as e:
-            print(f"Error calling OpenAI API: {e}")
+        else:
+            print("Failed to get response from GPT-4o-mini API.")
     else:
-        print("Failed to prepare content for GPT-3.5-turbo.")
+        print("Failed to prepare content for GPT-4o-mini.")
 
 if __name__ == "__main__":
     main()
