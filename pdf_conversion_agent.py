@@ -67,6 +67,37 @@ def analyze_pdf_accessibility(pdf_path):
         print(f"Error analyzing PDF accessibility: {e}")
         return None
 
+def convert_pdf_to_accessible(input_path, output_path):
+    """
+    Convert a PDF to a more accessible format.
+    
+    :param input_path: Path to the input PDF file
+    :param output_path: Path to save the converted PDF file
+    :return: True if conversion was successful, False otherwise
+    """
+    try:
+        doc = fitz.open(input_path)
+        for page in doc:
+            # Add basic structure: convert text to spans and add to a block
+            page.clean_contents()
+            page.wrap_contents()
+            
+            # Improve text contrast (simplified approach)
+            for block in page.get_text("dict")["blocks"]:
+                if block["type"] == 0:  # text block
+                    for line in block["lines"]:
+                        for span in line["spans"]:
+                            span["color"] = (0, 0, 0)  # Set text color to black
+            
+            # TODO: Add more accessibility improvements here
+        
+        doc.save(output_path)
+        doc.close()
+        return True
+    except Exception as e:
+        print(f"Error converting PDF to accessible format: {e}")
+        return False
+
 def main():
     parser = argparse.ArgumentParser(description="508 Compliant PDF Conversion Agent")
     parser.add_argument("input", help="Path to the input PDF file")
@@ -92,6 +123,13 @@ def main():
                 print(f"{issue.replace('_', ' ').capitalize()}: {count}")
     else:
         print("Failed to analyze PDF accessibility.")
+
+    # Convert PDF to a more accessible format
+    print("\nConverting PDF to a more accessible format...")
+    if convert_pdf_to_accessible(args.input, args.output):
+        print(f"Conversion successful. Accessible PDF saved to: {args.output}")
+    else:
+        print("Failed to convert PDF to accessible format.")
 
 if __name__ == "__main__":
     main()

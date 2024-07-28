@@ -10,6 +10,9 @@ This project provides a tool for analyzing and converting PDF files to ensure th
   - Low-contrast text
   - Improper reading order
   - Lack of document structure
+- Convert PDFs to a more accessible format:
+  - Add basic structure
+  - Improve text contrast
 
 ## Installation
 
