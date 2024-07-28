@@ -8,6 +8,7 @@ import openai
 import argparse
 import os
 import io
+import re
 
 def extract_pdf_text(pdf_path):
     """
@@ -98,6 +99,53 @@ def convert_pdf_to_accessible(input_path, output_path):
         print(f"Error converting PDF to accessible format: {e}")
         return False
 
+def prepare_content_for_gpt(pdf_path):
+    """
+    Prepare PDF content for processing by GPT-4o-mini.
+    
+    :param pdf_path: Path to the PDF file
+    :return: Formatted content as a string
+    """
+    try:
+        doc = fitz.open(pdf_path)
+        content = []
+        
+        # Extract metadata
+        metadata = doc.metadata
+        title = metadata.get('title', 'Untitled')
+        author = metadata.get('author', 'Unknown')
+        language = metadata.get('language', 'Unknown')
+        
+        # Add document overview
+        content.append(f"Document Title: {title}")
+        content.append(f"Author: {author}")
+        content.append(f"Language: {language}")
+        content.append("\nDocument Overview:")
+        
+        # Extract and format content
+        for page in doc:
+            blocks = page.get_text("dict")["blocks"]
+            for block in blocks:
+                if block["type"] == 0:  # text block
+                    for line in block["lines"]:
+                        text = " ".join([span["text"] for span in line["spans"]])
+                        # Identify and format headings (simplified approach)
+                        if re.match(r'^[A-Z0-9\s]{1,50}$', text) and len(text) > 3:
+                            content.append(f"\n## {text}")
+                        else:
+                            content.append(text)
+                elif block["type"] == 1:  # image block
+                    content.append("[Image]")
+        
+        # Construct the prompt
+        prompt = "Please analyze the following document for 508 compliance and provide recommendations to ensure it meets accessibility standards. Focus on text alternatives for non-text content, correct tagging, and logical reading order.\n\nDocument content:\n\n"
+        formatted_content = "\n".join(content)
+        
+        return prompt + formatted_content
+    except Exception as e:
+        print(f"Error preparing content for GPT: {e}")
+        return None
+
 def main():
     parser = argparse.ArgumentParser(description="508 Compliant PDF Conversion Agent")
     parser.add_argument("input", help="Path to the input PDF file")
@@ -123,6 +171,16 @@ def main():
                 print(f"{issue.replace('_', ' ').capitalize()}: {count}")
     else:
         print("Failed to analyze PDF accessibility.")
+
+    # Prepare content for GPT-4o-mini
+    print("\nPreparing content for GPT-4o-mini...")
+    gpt_content = prepare_content_for_gpt(args.input)
+    if gpt_content:
+        print("Content prepared successfully.")
+        if args.verbose:
+            print(f"Prepared content preview: {gpt_content[:200]}...")
+    else:
+        print("Failed to prepare content for GPT-4o-mini.")
 
     # Convert PDF to a more accessible format
     print("\nConverting PDF to a more accessible format...")
