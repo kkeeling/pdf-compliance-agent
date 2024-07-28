@@ -71,13 +71,15 @@ def main():
     parser = argparse.ArgumentParser(description="508 Compliant PDF Conversion Agent")
     parser.add_argument("input", help="Path to the input PDF file")
     parser.add_argument("output", help="Path to save the compliant PDF file")
+    parser.add_argument("--verbose", action="store_true", help="Enable verbose output")
     args = parser.parse_args()
 
     # Extract text from the input PDF
     extracted_text = extract_pdf_text(args.input)
     if extracted_text:
         print("Text extracted successfully.")
-        print(f"Extracted text preview: {extracted_text[:200]}...")
+        if args.verbose:
+            print(f"Extracted text preview: {extracted_text[:200]}...")
     else:
         print("Failed to extract text from the PDF.")
 
@@ -86,7 +88,8 @@ def main():
     if accessibility_issues:
         print("\nAccessibility Analysis Results:")
         for issue, count in accessibility_issues.items():
-            print(f"{issue.replace('_', ' ').capitalize()}: {count}")
+            if args.verbose or (isinstance(count, (int, bool)) and count > 0):
+                print(f"{issue.replace('_', ' ').capitalize()}: {count}")
     else:
         print("Failed to analyze PDF accessibility.")
 
