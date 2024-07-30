@@ -164,6 +164,20 @@ def read_system_prompt():
         logger.exception("Error reading system prompt file")
         return None
 
+def read_user_prompt():
+    """
+    Read the user prompt from the user_prompt.md file.
+    
+    :return: The content of the user prompt file as a string
+    """
+    logger = logging.getLogger('pdf_conversion_agent')
+    try:
+        with open('user_prompt.md', 'r') as file:
+            return file.read().strip()
+    except Exception as e:
+        logger.exception("Error reading user prompt file")
+        return None
+
 def call_gpt4o_mini_api(content):
     """
     Send content to GPT-4o-mini API and receive recommendations.
@@ -180,7 +194,10 @@ def call_gpt4o_mini_api(content):
             logger.error("Failed to read system prompt. Using default prompt.")
             system_prompt = "You are an AI model designed to analyze documents for compliance with accessibility standards and generate content for 508 compliant PDFs. Your task is to review the following document, provide recommendations for 508 compliance, and generate content for a compliant PDF."
         
-        user_prompt = f"""Please analyze the following document for 508 compliance and provide recommendations to ensure it meets accessibility standards. Focus on text alternatives for non-text content, correct tagging, and logical reading order.
+        user_prompt = read_user_prompt()
+        if user_prompt is None:
+            logger.error("Failed to read user prompt. Using default prompt.")
+            user_prompt = """Please analyze the following document for 508 compliance and provide recommendations to ensure it meets accessibility standards. Focus on text alternatives for non-text content, correct tagging, and logical reading order.
 
 Then, generate content for a 508 compliant PDF based on the original document and your recommendations. Include all necessary elements such as headings, paragraphs, lists, image descriptions, and any other relevant content to create a fully accessible document.
 
@@ -189,6 +206,8 @@ Document content:
 {content}
 
 Please provide your analysis and the generated content for the compliant PDF in your response."""
+        
+        user_prompt = user_prompt.format(content=content)
         
         tools = [
             {
