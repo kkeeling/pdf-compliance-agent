@@ -1,6 +1,6 @@
 import fitz  # PyMuPDF
 from pdfminer.high_level import extract_text
-from pdfminer.layout import LAParams, LTTextBox, LTImage
+from pdfminer.layout import LAParams, LTTextBox, LTImage, LTFigure
 from pdfminer.pdfpage import PDFPage
 from pdfminer.pdfinterp import PDFResourceManager, PDFPageInterpreter
 from pdfminer.converter import PDFPageAggregator
@@ -8,6 +8,7 @@ from openai import OpenAI
 import argparse
 import io
 import re
+from PIL import Image
 
 def extract_pdf_content(pdf_path):
     """
@@ -26,6 +27,11 @@ def extract_pdf_content(pdf_path):
             "tables": []
         }
         
+        # Extract additional metadata
+        content["metadata"]["page_count"] = len(doc)
+        content["metadata"]["file_size"] = doc.filesize
+        content["metadata"]["permissions"] = doc.permissions
+        
         for page_num, page in enumerate(doc):
             blocks = page.get_text("dict")["blocks"]
             for block in blocks:
@@ -39,23 +45,33 @@ def extract_pdf_content(pdf_path):
                         else:
                             content["structure"].append(("paragraph", text))
                 elif block["type"] == 1:  # image block
-                    image_info = {
-                        "page": page_num + 1,
-                        "bbox": block["bbox"],
-                        "size": (block["width"], block["height"])
-                    }
-                    content["images"].append(image_info)
-                    content["structure"].append(("image", f"[Image on page {page_num + 1}]"))
+                    image = page.get_image(block["number"])
+                    if image:
+                        img = Image.open(io.BytesIO(image["image"]))
+                        alt_text = image.get("alt", "")
+                        image_info = {
+                            "page": page_num + 1,
+                            "bbox": block["bbox"],
+                            "size": img.size,
+                            "alt_text": alt_text
+                        }
+                        content["images"].append(image_info)
+                        content["structure"].append(("image", f"[Image on page {page_num + 1}: {alt_text}]"))
             
-            # Extract tables using a simple heuristic
+            # Extract tables with content
             tables = page.find_tables()
             if tables:
                 for table in tables:
+                    table_data = [
+                        [cell.text if cell else "" for cell in row]
+                        for row in table.cells
+                    ]
                     content["tables"].append({
                         "page": page_num + 1,
                         "bbox": table.bbox,
                         "rows": len(table.cells),
-                        "cols": len(table.cells[0]) if table.cells else 0
+                        "cols": len(table.cells[0]) if table.cells else 0,
+                        "data": table_data
                     })
                     content["structure"].append(("table", f"[Table on page {page_num + 1}]"))
         
