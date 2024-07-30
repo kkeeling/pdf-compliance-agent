@@ -9,6 +9,7 @@ import argparse
 import io
 import re
 from PIL import Image
+import os
 
 def extract_pdf_content(pdf_path):
     """
@@ -29,7 +30,7 @@ def extract_pdf_content(pdf_path):
         
         # Extract additional metadata
         content["metadata"]["page_count"] = len(doc)
-        content["metadata"]["file_size"] = doc.stream_length  # Changed from doc.filesize
+        content["metadata"]["file_size"] = os.path.getsize(pdf_path)
         content["metadata"]["permissions"] = doc.permissions
         
         for page_num, page in enumerate(doc):
