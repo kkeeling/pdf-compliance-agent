@@ -40,9 +40,11 @@ def extract_pdf_content(pdf_path):
                     for line in block["lines"]:
                         text = " ".join([span["text"] for span in line["spans"]])
                         content["text"].append(text)
-                        # Identify and format headings (improved approach)
+                        # Identify and format headings, paragraphs, and list items
                         if any(span["size"] > 12 for span in line["spans"]):
                             content["structure"].append(("heading", text))
+                        elif text.strip().startswith(('•', '-', '*')) or re.match(r'^\d+\.', text.strip()):
+                            content["structure"].append(("list_item", text))
                         else:
                             content["structure"].append(("paragraph", text))
                 elif block["type"] == 1:  # image block
@@ -106,6 +108,8 @@ def prepare_content_for_gpt(content):
             formatted_content.append(f"\n## {item_content}")
         elif item_type == "paragraph":
             formatted_content.append(item_content)
+        elif item_type == "list_item":
+            formatted_content.append(f"  • {item_content}")
         elif item_type == "image":
             formatted_content.append("[Image]")
     
