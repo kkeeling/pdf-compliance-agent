@@ -113,9 +113,7 @@ def prepare_content_for_gpt(content):
         elif item_type == "image":
             formatted_content.append("[Image]")
     
-    # Construct the prompt
-    prompt = "Please analyze the following document for 508 compliance and provide recommendations to ensure it meets accessibility standards. Focus on text alternatives for non-text content, correct tagging, and logical reading order.\n\nDocument content:\n\n"
-    return prompt + "\n".join(formatted_content)
+    return "\n".join(formatted_content)
 
 def call_gpt4o_mini_api(content):
     """
@@ -128,7 +126,7 @@ def call_gpt4o_mini_api(content):
         client = OpenAI()
         
         system_prompt = "You are an AI model designed to analyze documents for compliance with accessibility standards. Your task is to review the following document and provide recommendations for 508 compliance."
-        user_prompt = f"Please analyze the following document for 508 compliance and provide recommendations to ensure it meets accessibility standards. Document content:\n\n{content}"
+        user_prompt = f"Please analyze the following document for 508 compliance and provide recommendations to ensure it meets accessibility standards. Focus on text alternatives for non-text content, correct tagging, and logical reading order.\n\nDocument content:\n\n{content}"
         
         response = client.chat.completions.create(
             model="gpt-3.5-turbo",  # Using GPT-3.5-turbo as a stand-in for GPT-4o-mini
