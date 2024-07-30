@@ -3,6 +3,7 @@ pdfminer.six==20231228
 openai==1.3.7
 reportlab==4.1.0
 Pillow==10.0.0
+fpdf==1.7.2
 
 # Additional setup information
 # Python version: 3.8 or higher
