@@ -10,6 +10,8 @@ import io
 import re
 from PIL import Image
 import os
+import logging
+from logging.handlers import RotatingFileHandler
 
 def extract_pdf_content(pdf_path):
     """
@@ -18,6 +20,7 @@ def extract_pdf_content(pdf_path):
     :param pdf_path: Path to the PDF file
     :return: A dictionary containing extracted content, metadata, and structure
     """
+    logger = logging.getLogger('pdf_conversion_agent')
     try:
         doc = fitz.open(pdf_path)
         content = {
@@ -82,9 +85,10 @@ def extract_pdf_content(pdf_path):
                     })
                     content["structure"].append(("table", f"[Table on page {page_num + 1}]"))
         
+        logger.info(f"Successfully extracted content from PDF: {pdf_path}")
         return content
     except Exception as e:
-        print(f"Error extracting content from PDF: {e}")
+        logger.exception(f"Error extracting content from PDF: {pdf_path}")
         return None
 
 def prepare_content_for_gpt(content):
@@ -94,26 +98,32 @@ def prepare_content_for_gpt(content):
     :param content: Extracted content from the PDF
     :return: Formatted content as a string
     """
-    formatted_content = []
-    
-    # Add metadata
-    formatted_content.append(f"Document Title: {content['metadata'].get('title', 'Untitled')}")
-    formatted_content.append(f"Author: {content['metadata'].get('author', 'Unknown')}")
-    formatted_content.append(f"Language: {content['metadata'].get('language', 'Unknown')}")
-    formatted_content.append("\nDocument Overview:")
-    
-    # Add structured content
-    for item_type, item_content in content["structure"]:
-        if item_type == "heading":
-            formatted_content.append(f"\n## {item_content}")
-        elif item_type == "paragraph":
-            formatted_content.append(item_content)
-        elif item_type == "list_item":
-            formatted_content.append(f"  • {item_content}")
-        elif item_type == "image":
-            formatted_content.append("[Image]")
-    
-    return "\n".join(formatted_content)
+    logger = logging.getLogger('pdf_conversion_agent')
+    try:
+        formatted_content = []
+        
+        # Add metadata
+        formatted_content.append(f"Document Title: {content['metadata'].get('title', 'Untitled')}")
+        formatted_content.append(f"Author: {content['metadata'].get('author', 'Unknown')}")
+        formatted_content.append(f"Language: {content['metadata'].get('language', 'Unknown')}")
+        formatted_content.append("\nDocument Overview:")
+        
+        # Add structured content
+        for item_type, item_content in content["structure"]:
+            if item_type == "heading":
+                formatted_content.append(f"\n## {item_content}")
+            elif item_type == "paragraph":
+                formatted_content.append(item_content)
+            elif item_type == "list_item":
+                formatted_content.append(f"  • {item_content}")
+            elif item_type == "image":
+                formatted_content.append("[Image]")
+        
+        logger.info("Successfully prepared content for GPT-4o-mini")
+        return "\n".join(formatted_content)
+    except Exception as e:
+        logger.exception("Error preparing content for GPT-4o-mini")
+        return None
 
 def call_gpt4o_mini_api(content):
     """
@@ -122,6 +132,7 @@ def call_gpt4o_mini_api(content):
     :param content: Formatted content to send to the API
     :return: API response containing recommendations
     """
+    logger = logging.getLogger('pdf_conversion_agent')
     try:
         client = OpenAI()
         
@@ -145,10 +156,32 @@ Please provide your analysis and the generated content for the compliant PDF in 
         )
         
         api_response = response.choices[0].message.content
+        logger.info("Successfully received response from GPT-4o-mini API")
         return api_response
     except Exception as e:
-        print(f"Error calling OpenAI API: {e}")
+        logger.exception("Error calling OpenAI API")
         return None
+
+def setup_logging(verbose):
+    logger = logging.getLogger('pdf_conversion_agent')
+    logger.setLevel(logging.DEBUG if verbose else logging.INFO)
+
+    # Console handler
+    console_handler = logging.StreamHandler()
+    console_handler.setLevel(logging.DEBUG if verbose else logging.INFO)
+    console_formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
+    console_handler.setFormatter(console_formatter)
+
+    # File handler
+    file_handler = RotatingFileHandler('pdf_conversion.log', maxBytes=1024*1024, backupCount=5)
+    file_handler.setLevel(logging.DEBUG)
+    file_formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(filename)s:%(lineno)d - %(message)s')
+    file_handler.setFormatter(file_formatter)
+
+    logger.addHandler(console_handler)
+    logger.addHandler(file_handler)
+
+    return logger
 
 def main():
     parser = argparse.ArgumentParser(description="508 Compliant PDF Conversion Agent")
@@ -157,43 +190,48 @@ def main():
     parser.add_argument("--verbose", action="store_true", help="Enable verbose output")
     args = parser.parse_args()
 
-    # Extract PDF content
-    print("\nExtracting PDF content...")
-    pdf_content = extract_pdf_content(args.input)
-    if pdf_content:
-        print("Content extracted successfully.")
-        if args.verbose:
-            print(f"Extracted text preview: {pdf_content['text'][:200]}...")
-            print(f"Document metadata: {pdf_content['metadata']}")
-            print(f"Number of images detected: {len(pdf_content['images'])}")
-            print(f"Number of tables detected: {len(pdf_content['tables'])}")
-            print(f"Document structure preview: {pdf_content['structure'][:10]}")
-        
-        # Prepare content for GPT-4o-mini
-        print("\nPreparing content for GPT-4o-mini...")
-        gpt_content = prepare_content_for_gpt(pdf_content)
-        if args.verbose:
-            print(f"Prepared content preview: {gpt_content[:200]}...")
-        
-        # Call GPT-4o-mini API
-        print("\nCalling GPT-4o-mini API...")
-        api_response = call_gpt4o_mini_api(gpt_content)
-        if api_response:
-            print("GPT-4o-mini analysis completed successfully.")
+    logger = setup_logging(args.verbose)
+
+    try:
+        # Extract PDF content
+        logger.info("Extracting PDF content...")
+        pdf_content = extract_pdf_content(args.input)
+        if pdf_content:
+            logger.info("Content extracted successfully.")
             if args.verbose:
-                print(f"API response preview: {api_response[:200]}...")
+                logger.debug(f"Extracted text preview: {pdf_content['text'][:200]}...")
+                logger.debug(f"Document metadata: {pdf_content['metadata']}")
+                logger.debug(f"Number of images detected: {len(pdf_content['images'])}")
+                logger.debug(f"Number of tables detected: {len(pdf_content['tables'])}")
+                logger.debug(f"Document structure preview: {pdf_content['structure'][:10]}")
             
-            print("\nGPT-4o-mini Analysis Results:")
-            print(api_response)
+            # Prepare content for GPT-4o-mini
+            logger.info("Preparing content for GPT-4o-mini...")
+            gpt_content = prepare_content_for_gpt(pdf_content)
+            if args.verbose:
+                logger.debug(f"Prepared content preview: {gpt_content[:200]}...")
             
-            # TODO: Implement PDF generation with compliance recommendations
-            if args.output:
-                print(f"\nGenerating compliant PDF: {args.output}")
-                # Implement PDF generation logic here
+            # Call GPT-4o-mini API
+            logger.info("Calling GPT-4o-mini API...")
+            api_response = call_gpt4o_mini_api(gpt_content)
+            if api_response:
+                logger.info("GPT-4o-mini analysis completed successfully.")
+                if args.verbose:
+                    logger.debug(f"API response preview: {api_response[:200]}...")
+                
+                logger.info("GPT-4o-mini Analysis Results:")
+                logger.info(api_response)
+                
+                # TODO: Implement PDF generation with compliance recommendations
+                if args.output:
+                    logger.info(f"Generating compliant PDF: {args.output}")
+                    # Implement PDF generation logic here
+            else:
+                logger.error("Failed to get response from GPT-4o-mini API.")
         else:
-            print("Failed to get response from GPT-4o-mini API.")
-    else:
-        print("Failed to extract content from PDF.")
+            logger.error("Failed to extract content from PDF.")
+    except Exception as e:
+        logger.exception(f"An error occurred during PDF conversion: {str(e)}")
 
 if __name__ == "__main__":
     main()
