@@ -11,33 +11,53 @@ import re
 
 def extract_pdf_content(pdf_path):
     """
-    Extract text and metadata from a PDF file.
+    Extract text, metadata, and structure from a PDF file.
     
     :param pdf_path: Path to the PDF file
-    :return: A dictionary containing extracted content and metadata
+    :return: A dictionary containing extracted content, metadata, and structure
     """
     try:
         doc = fitz.open(pdf_path)
         content = {
             "text": [],
             "metadata": doc.metadata,
-            "structure": []
+            "structure": [],
+            "images": [],
+            "tables": []
         }
         
-        for page in doc:
+        for page_num, page in enumerate(doc):
             blocks = page.get_text("dict")["blocks"]
             for block in blocks:
                 if block["type"] == 0:  # text block
                     for line in block["lines"]:
                         text = " ".join([span["text"] for span in line["spans"]])
                         content["text"].append(text)
-                        # Identify and format headings (simplified approach)
-                        if re.match(r'^[A-Z0-9\s]{1,50}$', text) and len(text) > 3:
+                        # Identify and format headings (improved approach)
+                        if any(span["size"] > 12 for span in line["spans"]):
                             content["structure"].append(("heading", text))
                         else:
                             content["structure"].append(("paragraph", text))
                 elif block["type"] == 1:  # image block
-                    content["structure"].append(("image", "[Image]"))
+                    image_info = {
+                        "page": page_num + 1,
+                        "bbox": block["bbox"],
+                        "size": (block["width"], block["height"])
+                    }
+                    content["images"].append(image_info)
+                    content["structure"].append(("image", f"[Image on page {page_num + 1}]"))
+            
+            # Extract tables using a simple heuristic
+            tables = page.find_tables()
+            if tables:
+                for table in tables:
+                    content["tables"].append({
+                        "page": page_num + 1,
+                        "bbox": table.bbox,
+                        "rows": len(table.cells),
+                        "cols": len(table.cells[0]) if table.cells else 0
+                    })
+                    content["structure"].append(("table", f"[Table on page {page_num + 1}]"))
         
         return content
     except Exception as e:
@@ -112,7 +132,11 @@ def main():
     if pdf_content:
         print("Content extracted successfully.")
         if args.verbose:
-            print(f"Extracted content preview: {pdf_content['text'][:200]}...")
+            print(f"Extracted text preview: {pdf_content['text'][:200]}...")
+            print(f"Document metadata: {pdf_content['metadata']}")
+            print(f"Number of images detected: {len(pdf_content['images'])}")
+            print(f"Number of tables detected: {len(pdf_content['tables'])}")
+            print(f"Document structure preview: {pdf_content['structure'][:10]}")
         
         # Prepare content for GPT-4o-mini
         print("\nPreparing content for GPT-4o-mini...")
