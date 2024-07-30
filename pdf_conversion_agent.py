@@ -5,118 +5,72 @@ from pdfminer.pdfpage import PDFPage
 from pdfminer.pdfinterp import PDFResourceManager, PDFPageInterpreter
 from pdfminer.converter import PDFPageAggregator
 from openai import OpenAI
-import json
 import argparse
-import os
 import io
 import re
 
-def extract_pdf_text(pdf_path):
+def extract_pdf_content(pdf_path):
     """
-    Extract text from a PDF file.
+    Extract text and metadata from a PDF file.
     
     :param pdf_path: Path to the PDF file
-    :return: Extracted text as a string
-    """
-    try:
-        text = extract_text(pdf_path)
-        return text
-    except Exception as e:
-        print(f"Error extracting text from PDF: {e}")
-        return None
-
-def analyze_pdf_accessibility(pdf_path):
-    """
-    Analyze the accessibility of a PDF document.
-    
-    :param pdf_path: Path to the PDF file
-    :return: A dictionary containing accessibility issues
-    """
-    issues = {
-        "missing_alt_text": 0,
-        "low_contrast_text": 0,
-        "improper_reading_order": False,
-        "no_document_structure": True
-    }
-    
-    try:
-        resource_manager = PDFResourceManager()
-        fake_file_handle = io.StringIO()
-        laparams = LAParams()
-        device = PDFPageAggregator(resource_manager, laparams=laparams)
-        interpreter = PDFPageInterpreter(resource_manager, device)
-        
-        with open(pdf_path, 'rb') as file:
-            for page in PDFPage.get_pages(file):
-                interpreter.process_page(page)
-                layout = device.get_result()
-                
-                for element in layout:
-                    if isinstance(element, LTImage):
-                        issues["missing_alt_text"] += 1
-                    elif isinstance(element, LTTextBox):
-                        # This is a simplification. In a real scenario, you'd need more 
-                        # sophisticated analysis for contrast and reading order.
-                        if len(element.get_text().strip()) < 5:  # Arbitrary threshold
-                            issues["low_contrast_text"] += 1
-                
-                # If we find any structure, update the flag
-                if hasattr(page, 'get_contents'):
-                    issues["no_document_structure"] = False
-        
-        return issues
-    except Exception as e:
-        print(f"Error analyzing PDF accessibility: {e}")
-        return None
-
-
-def prepare_content_for_gpt(pdf_path):
-    """
-    Prepare PDF content for processing by GPT-4o-mini.
-    
-    :param pdf_path: Path to the PDF file
-    :return: Formatted content as a string
+    :return: A dictionary containing extracted content and metadata
     """
     try:
         doc = fitz.open(pdf_path)
-        content = []
+        content = {
+            "text": [],
+            "metadata": doc.metadata,
+            "structure": []
+        }
         
-        # Extract metadata
-        metadata = doc.metadata
-        title = metadata.get('title', 'Untitled')
-        author = metadata.get('author', 'Unknown')
-        language = metadata.get('language', 'Unknown')
-        
-        # Add document overview
-        content.append(f"Document Title: {title}")
-        content.append(f"Author: {author}")
-        content.append(f"Language: {language}")
-        content.append("\nDocument Overview:")
-        
-        # Extract and format content
         for page in doc:
             blocks = page.get_text("dict")["blocks"]
             for block in blocks:
                 if block["type"] == 0:  # text block
                     for line in block["lines"]:
                         text = " ".join([span["text"] for span in line["spans"]])
+                        content["text"].append(text)
                         # Identify and format headings (simplified approach)
                         if re.match(r'^[A-Z0-9\s]{1,50}$', text) and len(text) > 3:
-                            content.append(f"\n## {text}")
+                            content["structure"].append(("heading", text))
                         else:
-                            content.append(text)
+                            content["structure"].append(("paragraph", text))
                 elif block["type"] == 1:  # image block
-                    content.append("[Image]")
+                    content["structure"].append(("image", "[Image]"))
         
-        # Construct the prompt
-        prompt = "Please analyze the following document for 508 compliance and provide recommendations to ensure it meets accessibility standards. Focus on text alternatives for non-text content, correct tagging, and logical reading order.\n\nDocument content:\n\n"
-        formatted_content = "\n".join(content)
-        
-        return prompt + formatted_content
+        return content
     except Exception as e:
-        print(f"Error preparing content for GPT: {e}")
+        print(f"Error extracting content from PDF: {e}")
         return None
 
+def prepare_content_for_gpt(content):
+    """
+    Prepare PDF content for processing by GPT-4o-mini.
+    
+    :param content: Extracted content from the PDF
+    :return: Formatted content as a string
+    """
+    formatted_content = []
+    
+    # Add metadata
+    formatted_content.append(f"Document Title: {content['metadata'].get('title', 'Untitled')}")
+    formatted_content.append(f"Author: {content['metadata'].get('author', 'Unknown')}")
+    formatted_content.append(f"Language: {content['metadata'].get('language', 'Unknown')}")
+    formatted_content.append("\nDocument Overview:")
+    
+    # Add structured content
+    for item_type, item_content in content["structure"]:
+        if item_type == "heading":
+            formatted_content.append(f"\n## {item_content}")
+        elif item_type == "paragraph":
+            formatted_content.append(item_content)
+        elif item_type == "image":
+            formatted_content.append("[Image]")
+    
+    # Construct the prompt
+    prompt = "Please analyze the following document for 508 compliance and provide recommendations to ensure it meets accessibility standards. Focus on text alternatives for non-text content, correct tagging, and logical reading order.\n\nDocument content:\n\n"
+    return prompt + "\n".join(formatted_content)
 
 def call_gpt4o_mini_api(content):
     """
@@ -146,16 +100,23 @@ def call_gpt4o_mini_api(content):
         return None
 
 def main():
-    parser = argparse.ArgumentParser(description="508 Compliant PDF Analysis Agent")
+    parser = argparse.ArgumentParser(description="508 Compliant PDF Conversion Agent")
     parser.add_argument("input", help="Path to the input PDF file")
+    parser.add_argument("--output", help="Path to save the compliant PDF")
     parser.add_argument("--verbose", action="store_true", help="Enable verbose output")
     args = parser.parse_args()
 
-    # Prepare content for GPT-4o-mini
-    print("\nPreparing content for GPT-4o-mini...")
-    gpt_content = prepare_content_for_gpt(args.input)
-    if gpt_content:
-        print("Content prepared successfully.")
+    # Extract PDF content
+    print("\nExtracting PDF content...")
+    pdf_content = extract_pdf_content(args.input)
+    if pdf_content:
+        print("Content extracted successfully.")
+        if args.verbose:
+            print(f"Extracted content preview: {pdf_content['text'][:200]}...")
+        
+        # Prepare content for GPT-4o-mini
+        print("\nPreparing content for GPT-4o-mini...")
+        gpt_content = prepare_content_for_gpt(pdf_content)
         if args.verbose:
             print(f"Prepared content preview: {gpt_content[:200]}...")
         
@@ -169,10 +130,15 @@ def main():
             
             print("\nGPT-4o-mini Analysis Results:")
             print(api_response)
+            
+            # TODO: Implement PDF generation with compliance recommendations
+            if args.output:
+                print(f"\nGenerating compliant PDF: {args.output}")
+                # Implement PDF generation logic here
         else:
             print("Failed to get response from GPT-4o-mini API.")
     else:
-        print("Failed to prepare content for GPT-4o-mini.")
+        print("Failed to extract content from PDF.")
 
 if __name__ == "__main__":
     main()
