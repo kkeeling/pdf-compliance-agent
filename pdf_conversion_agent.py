@@ -29,7 +29,7 @@ def extract_pdf_content(pdf_path):
         
         # Extract additional metadata
         content["metadata"]["page_count"] = len(doc)
-        content["metadata"]["file_size"] = doc.filesize
+        content["metadata"]["file_size"] = doc.stream_length  # Changed from doc.filesize
         content["metadata"]["permissions"] = doc.permissions
         
         for page_num, page in enumerate(doc):
