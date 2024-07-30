@@ -12,6 +12,8 @@ from PIL import Image
 import os
 import logging
 from logging.handlers import RotatingFileHandler
+from fpdf import FPDF
+import json
 
 def extract_pdf_content(pdf_path):
     """
@@ -130,7 +132,7 @@ def call_gpt4o_mini_api(content):
     Send content to GPT-4o-mini API and receive recommendations.
     
     :param content: Formatted content to send to the API
-    :return: API response containing recommendations
+    :return: API response containing recommendations and content for PDF generation
     """
     logger = logging.getLogger('pdf_conversion_agent')
     try:
@@ -157,10 +159,53 @@ Please provide your analysis and the generated content for the compliant PDF in 
         
         api_response = response.choices[0].message.content
         logger.info("Successfully received response from GPT-4o-mini API")
-        return api_response
+        return json.loads(api_response)
     except Exception as e:
         logger.exception("Error calling OpenAI API")
         return None
+
+def generate_pdf(output_path, gpt_response, pdf_metadata):
+    """
+    Generate a 508 compliant PDF file based on the GPT-4o-mini response and the provided metadata.
+    
+    :param output_path: Path to the generated PDF file
+    :param gpt_response: The response from the GPT-4o-mini API
+    :param pdf_metadata: A dictionary containing the PDF metadata
+    """
+    logger = logging.getLogger('pdf_conversion_agent')
+    try:
+        # Create a new PDF document
+        pdf = FPDF()
+        pdf.set_title(pdf_metadata.get('title', 'PDF Document'))
+        pdf.set_author(pdf_metadata.get('author', 'Unknown'))
+        pdf.set_subject(pdf_metadata.get('subject', 'PDF Document'))
+        
+        # Add the content from the GPT-4o-mini response
+        for element in gpt_response['content']:
+            if element['type'] == 'heading':
+                pdf.add_page()
+                pdf.set_font('Arial', 'B', 16)
+                pdf.cell(0, 10, element['text'], 0, 1)
+            elif element['type'] == 'paragraph':
+                pdf.set_font('Arial', '', 12)
+                pdf.multi_cell(0, 5, element['text'], 0, 'L')
+                pdf.ln()
+            elif element['type'] == 'list':
+                pdf.set_font('Arial', '', 12)
+                for list_item in element['items']:
+                    pdf.cell(0, 5, '- ' + list_item, 0, 1)
+                pdf.ln()
+            elif element['type'] == 'image':
+                pdf.add_page()
+                pdf.set_font('Arial', '', 12)
+                pdf.cell(0, 10, element['alt_text'], 0, 1)
+                pdf.image(element['path'], x=20, y=20, w=170, h=170)
+        
+        # Save the PDF file
+        pdf.output(output_path, 'F')
+        logger.info(f"PDF generated at {output_path}")
+    except Exception as e:
+        logger.exception(f"Error generating PDF: {output_path}")
 
 def setup_logging(verbose):
     logger = logging.getLogger('pdf_conversion_agent')
@@ -222,10 +267,10 @@ def main():
                 logger.info("GPT-4o-mini Analysis Results:")
                 logger.info(api_response)
                 
-                # TODO: Implement PDF generation with compliance recommendations
+                # Generate compliant PDF
                 if args.output:
                     logger.info(f"Generating compliant PDF: {args.output}")
-                    # Implement PDF generation logic here
+                    generate_pdf(args.output, api_response, pdf_content['metadata'])
             else:
                 logger.error("Failed to get response from GPT-4o-mini API.")
         else:
