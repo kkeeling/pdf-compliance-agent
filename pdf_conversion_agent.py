@@ -125,8 +125,16 @@ def call_gpt4o_mini_api(content):
     try:
         client = OpenAI()
         
-        system_prompt = "You are an AI model designed to analyze documents for compliance with accessibility standards. Your task is to review the following document and provide recommendations for 508 compliance."
-        user_prompt = f"Please analyze the following document for 508 compliance and provide recommendations to ensure it meets accessibility standards. Focus on text alternatives for non-text content, correct tagging, and logical reading order.\n\nDocument content:\n\n{content}"
+        system_prompt = "You are an AI model designed to analyze documents for compliance with accessibility standards and generate content for 508 compliant PDFs. Your task is to review the following document, provide recommendations for 508 compliance, and generate content for a compliant PDF."
+        user_prompt = f"""Please analyze the following document for 508 compliance and provide recommendations to ensure it meets accessibility standards. Focus on text alternatives for non-text content, correct tagging, and logical reading order.
+
+Then, generate content for a 508 compliant PDF based on the original document and your recommendations. Include all necessary elements such as headings, paragraphs, lists, image descriptions, and any other relevant content to create a fully accessible document.
+
+Document content:
+
+{content}
+
+Please provide your analysis and the generated content for the compliant PDF in your response."""
         
         response = client.chat.completions.create(
             model="gpt-3.5-turbo",  # Using GPT-3.5-turbo as a stand-in for GPT-4o-mini
