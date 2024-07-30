@@ -127,6 +127,29 @@ def prepare_content_for_gpt(content):
         logger.exception("Error preparing content for GPT-4o-mini")
         return None
 
+def generate_pdf(content, output_path):
+    """
+    Generate a 508 compliant PDF file based on the provided content.
+    
+    :param content: The content to be included in the PDF
+    :param output_path: Path to save the generated PDF file
+    """
+    logger = logging.getLogger('pdf_conversion_agent')
+    try:
+        # Create a new PDF document
+        pdf = FPDF()
+        pdf.add_page()
+        pdf.set_font('Arial', '', 12)
+        
+        # Add the content to the PDF
+        pdf.multi_cell(0, 5, content)
+        
+        # Save the PDF file
+        pdf.output(output_path, 'F')
+        logger.info(f"PDF generated at {output_path}")
+    except Exception as e:
+        logger.exception(f"Error generating PDF: {output_path}")
+
 def call_gpt4o_mini_api(content):
     """
     Send content to GPT-4o-mini API and receive recommendations.
@@ -149,63 +172,54 @@ Document content:
 
 Please provide your analysis and the generated content for the compliant PDF in your response."""
         
+        tools = [
+            {
+                "type": "function",
+                "function": {
+                    "name": "generate_pdf",
+                    "description": "Generates a PDF file from the provided content.",
+                    "parameters": {
+                        "type": "object",
+                        "properties": {
+                            "content": {
+                                "type": "string",
+                                "description": "The content to be included in the PDF."
+                            },
+                            "output_path": {
+                                "type": "string",
+                                "description": "Path where the generated PDF file will be saved."
+                            }
+                        },
+                        "required": ["content", "output_path"]
+                    }
+                }
+            }
+        ]
+        
         response = client.chat.completions.create(
             model="gpt-3.5-turbo",  # Using GPT-3.5-turbo as a stand-in for GPT-4o-mini
             messages=[
                 {"role": "system", "content": system_prompt},
                 {"role": "user", "content": user_prompt}
-            ]
+            ],
+            tools=tools,
+            tool_choice="auto"
         )
         
-        api_response = response.choices[0].message.content
+        api_response = response.choices[0].message
         logger.info("Successfully received response from GPT-4o-mini API")
-        return json.loads(api_response)
+        
+        if api_response.tool_calls:
+            for tool_call in api_response.tool_calls:
+                if tool_call.function.name == "generate_pdf":
+                    function_args = json.loads(tool_call.function.arguments)
+                    generate_pdf(function_args["content"], function_args["output_path"])
+                    return f"PDF generated at {function_args['output_path']}"
+        else:
+            return api_response.content
     except Exception as e:
         logger.exception("Error calling OpenAI API")
         return None
-
-def generate_pdf(output_path, gpt_response, pdf_metadata):
-    """
-    Generate a 508 compliant PDF file based on the GPT-4o-mini response and the provided metadata.
-    
-    :param output_path: Path to the generated PDF file
-    :param gpt_response: The response from the GPT-4o-mini API
-    :param pdf_metadata: A dictionary containing the PDF metadata
-    """
-    logger = logging.getLogger('pdf_conversion_agent')
-    try:
-        # Create a new PDF document
-        pdf = FPDF()
-        pdf.set_title(pdf_metadata.get('title', 'PDF Document'))
-        pdf.set_author(pdf_metadata.get('author', 'Unknown'))
-        pdf.set_subject(pdf_metadata.get('subject', 'PDF Document'))
-        
-        # Add the content from the GPT-4o-mini response
-        for element in gpt_response['content']:
-            if element['type'] == 'heading':
-                pdf.add_page()
-                pdf.set_font('Arial', 'B', 16)
-                pdf.cell(0, 10, element['text'], 0, 1)
-            elif element['type'] == 'paragraph':
-                pdf.set_font('Arial', '', 12)
-                pdf.multi_cell(0, 5, element['text'], 0, 'L')
-                pdf.ln()
-            elif element['type'] == 'list':
-                pdf.set_font('Arial', '', 12)
-                for list_item in element['items']:
-                    pdf.cell(0, 5, '- ' + list_item, 0, 1)
-                pdf.ln()
-            elif element['type'] == 'image':
-                pdf.add_page()
-                pdf.set_font('Arial', '', 12)
-                pdf.cell(0, 10, element['alt_text'], 0, 1)
-                pdf.image(element['path'], x=20, y=20, w=170, h=170)
-        
-        # Save the PDF file
-        pdf.output(output_path, 'F')
-        logger.info(f"PDF generated at {output_path}")
-    except Exception as e:
-        logger.exception(f"Error generating PDF: {output_path}")
 
 def setup_logging(verbose):
     logger = logging.getLogger('pdf_conversion_agent')
