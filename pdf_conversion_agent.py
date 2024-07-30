@@ -46,18 +46,22 @@ def extract_pdf_content(pdf_path):
                         else:
                             content["structure"].append(("paragraph", text))
                 elif block["type"] == 1:  # image block
-                    image = page.get_image(block["number"])
-                    if image:
-                        img = Image.open(io.BytesIO(image["image"]))
-                        alt_text = image.get("alt", "")
-                        image_info = {
-                            "page": page_num + 1,
-                            "bbox": block["bbox"],
-                            "size": img.size,
-                            "alt_text": alt_text
-                        }
-                        content["images"].append(image_info)
-                        content["structure"].append(("image", f"[Image on page {page_num + 1}: {alt_text}]"))
+                    images = page.get_images()
+                    for img_index, img in enumerate(images):
+                        xref = img[0]
+                        base_image = doc.extract_image(xref)
+                        if base_image:
+                            image_bytes = base_image["image"]
+                            img_obj = Image.open(io.BytesIO(image_bytes))
+                            alt_text = f"Image {img_index + 1} on page {page_num + 1}"
+                            image_info = {
+                                "page": page_num + 1,
+                                "bbox": block["bbox"],
+                                "size": img_obj.size,
+                                "alt_text": alt_text
+                            }
+                            content["images"].append(image_info)
+                            content["structure"].append(("image", f"[{alt_text}]"))
             
             # Extract tables with content
             tables = page.find_tables()
