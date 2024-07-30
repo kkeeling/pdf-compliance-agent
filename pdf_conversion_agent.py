@@ -197,7 +197,7 @@ Please provide your analysis and the generated content for the compliant PDF in 
         ]
         
         response = client.chat.completions.create(
-            model="gpt-3.5-turbo",  # Using GPT-3.5-turbo as a stand-in for GPT-4o-mini
+            model="gpt-4o-mini",  # Using GPT-3.5-turbo as a stand-in for GPT-4o-mini
             messages=[
                 {"role": "system", "content": system_prompt},
                 {"role": "user", "content": user_prompt}
