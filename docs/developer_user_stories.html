@@ -4,92 +4,115 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>508 Compliant PDF Conversion Agent Developer User Stories</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            margin: 20px;
-            line-height: 1.6;
-        }
-        h1 {
-            color: #333;
-        }
-        h2 {
-            color: #555;
-            margin-top: 20px;
-        }
-        p {
-            margin: 0 0 10px;
-        }
-        ul {
-            margin: 0 0 10px;
-            padding-left: 20px;
-        }
-        code {
-            background-color: #f4f4f4;
-            padding: 2px 4px;
-            border-radius: 3px;
-        }
-    </style>
 </head>
 <body>
     <h1>508 Compliant PDF Conversion Agent Developer User Stories</h1>
-    
-    <h2>Ticket 1: Set Up Initial Project and Dependencies</h2>
-    <p><strong>Description:</strong> Set up the development environment for the AI-powered 508 compliant PDF tool. This includes configuring the project repository, installing necessary libraries, and verifying compatibility to avoid dependency conflicts.</p>
+
+    <h2>LIN-001 - Setup Initial Project Environment</h2>
+    <p><strong>Description:</strong> Set up the initial project environment including all dependencies.</p>
+    <p><strong>Acceptance Criteria:</strong></p>
     <ul>
-        <li>Create a new Git repository for the project.</li>
-        <li>Install Python 3.8 or higher.</li>
-        <li>Install the following libraries:
-            <ul>
-                <li>`PyMuPDF` (fitz) for PDF content extraction</li>
-                <li>`pdfminer.six` for PDF text extraction</li>
-                <li>`reportlab` for PDF creation</li>
-                <li>`openai` for GPT-4o-mini API integration</li>
-            </ul>
-        </li>
+        <li>Create a new Python project.</li>
+        <li>Set up a virtual environment.</li>
+        <li>Install required libraries: PyMuPDF, pdfminer.six, reportlab, openai.</li>
+        <li>Create and configure requirements.txt.</li>
         <li>Verify the compatibility of all required libraries to avoid dependency conflicts.</li>
-        <li>Create a `requirements.txt` file listing all dependencies.</li>
-        <li>Set up a virtual environment to manage dependencies.</li>
     </ul>
-    
-    <h2>Ticket 2: Implement PDF Content Extraction</h2>
-    <p><strong>Description:</strong> Develop functionality to extract text and metadata from PDF files. This component should use the `PyMuPDF` (fitz) library to retrieve content and structure necessary for compliance processing.</p>
+    <p><strong>Details:</strong></p>
     <ul>
-        <li>Extract all text from the PDF, including text from images if possible.</li>
-        <li>Maintain the document’s structure, including headings, lists, and tables.</li>
-        <li>Extract document metadata such as title, author, and language.</li>
-        <li>Convert extracted text and metadata into a structured format suitable for sending to GPT-4o-mini.</li>
+        <li>Use Python version 3.8 or higher.</li>
+        <li>Include necessary setup scripts and documentation for environment configuration.</li>
     </ul>
-    
-    <h2>Ticket 3: Develop Command-Line Interface (CLI)</h2>
-    <p><strong>Description:</strong> Create a command-line interface using Python’s `argparse` to handle user inputs for file paths and configuration options.</p>
+
+    <h2>LIN-002 - Implement PDF Content Extraction</h2>
+    <p><strong>Description:</strong> Develop the functionality to extract content from PDFs using PyMuPDF.</p>
+    <p><strong>Acceptance Criteria:</strong></p>
     <ul>
-        <li>CLI Arguments:
+        <li>Implement a function to extract text, images, and metadata from a PDF file.</li>
+        <li>Maintain the document structure, including headings and lists.</li>
+        <li>Ensure extracted content is suitable for formatting and processing.</li>
+    </ul>
+    <p><strong>Details:</strong></p>
+    <ul>
+        <li>Use PyMuPDF (fitz) library.</li>
+        <li>Extract and organize content into a structured format.</li>
+    </ul>
+
+    <h2>LIN-003 - Format Extracted Content for LLM</h2>
+    <p><strong>Description:</strong> Format the extracted PDF content into a structured text format for GPT-4o-mini.</p>
+    <p><strong>Acceptance Criteria:</strong></p>
+    <ul>
+        <li>Convert the extracted content into a structured format including headings, lists, tables, and metadata.</li>
+        <li>Ensure the formatted content is ready for LLM processing.</li>
+    </ul>
+    <p><strong>Details:</strong></p>
+    <ul>
+        <li>Include document metadata and summary.</li>
+        <li>Prepare content in a clear and organized text format.</li>
+    </ul>
+
+    <h2>LIN-004 - Create and Send Prompts to GPT-4o-mini</h2>
+    <p><strong>Description:</strong> Develop functionality to send prompts to GPT-4o-mini and handle responses.</p>
+    <p><strong>Acceptance Criteria:</strong></p>
+    <ul>
+        <li>Create a system prompt and user prompt for GPT-4o-mini.</li>
+        <li>Send formatted content to GPT-4o-mini and receive a response with the necessary data for generating a compliant PDF.</li>
+        <li>Ensure the prompts clearly indicate that the expected response includes content for generating a compliant PDF.</li>
+    </ul>
+    <p><strong>Details:</strong></p>
+    <ul>
+        <li><strong>System Prompt Example:</strong> 
+            <pre>
+            You are an AI model designed to analyze documents for compliance with accessibility standards. Your task is to review the following document and provide recommendations for 508 compliance.
+            </pre>
+        </li>
+        <li><strong>User Prompt Example:</strong> 
+            <pre>
+            Please analyze the following document for 508 compliance and provide the content necessary to generate a compliant PDF. Document content:
+            [Insert Extracted and Formatted Text Here]
+            </pre>
+        </li>
+        <li><strong>Output Expectation:</strong> Response should include content and output path for the new PDF.</li>
+    </ul>
+
+    <h2>LIN-005 - Define and Use generate_pdf Function</h2>
+    <p><strong>Description:</strong> Implement and utilize the generate_pdf function to create a compliant PDF based on LLM response.</p>
+    <p><strong>Acceptance Criteria:</strong></p>
+    <ul>
+        <li>Define the generate_pdf function according to OpenAI's schema.</li>
+        <li>Call the generate_pdf function with the content provided by GPT-4o-mini.</li>
+        <li>Ensure that the output path and content parameters are used correctly to generate the compliant PDF.</li>
+    </ul>
+    <p><strong>Details:</strong></p>
+    <ul>
+        <li><strong>Function Definition Example:</strong>
+            <pre>
+            {
+              "name": "generate_pdf",
+              "description": "Generates a PDF file from the provided content.",
+              "parameters": {
+                "type": "object",
+                "properties": {
+                  "content": {
+                    "type": "string",
+                    "description": "The content to be included in the PDF."
+                  },
+                  "output_path": {
+                    "type": "string",
+                    "description": "Path where the generated PDF file will be saved."
+                  }
+                },
+                "required": ["content", "output_path"]
+              }
+            }
+            </pre>
+        </li>
+        <li><strong>Implementation Details:</strong> 
             <ul>
-                <li>`--input`: Path to the input PDF file.</li>
-                <li>`--output`: Path to save the compliant PDF.</li>
-                <li>Optional: `--verbose` to enable detailed logging.</li>
+                <li>The GPT-4o-mini model will provide content and output path.</li>
+                <li>Use the generate_pdf function to create the final compliant PDF.</li>
             </ul>
         </li>
-        <li>Ensure that the CLI properly parses and validates input and output paths.</li>
-        <li>Handle errors gracefully (e.g., invalid file paths, missing arguments).</li>
-        <li>Update README with CLI usage instructions.</li>
-    </ul>
-    
-    <h2>Ticket 4: Prepare Content for GPT-4o-mini</h2>
-    <p><strong>Description:</strong> Implement functionality to convert extracted PDF content into a format suitable for processing by the GPT-4o-mini model.</p>
-    <ul>
-        <li>Convert extracted text and metadata into plain text format.</li>
-        <li>Include relevant document structure and metadata in the prompt.</li>
-    </ul>
-    
-    <h2>Ticket 5: Integration with GPT-4o-mini API</h2>
-    <p><strong>Description:</strong> Develop functionality to send extracted PDF content to the GPT-4o-mini API and receive recommendations or corrections.</p>
-    <ul>
-        <li>Use the `openai` Python library to interact with the GPT-4o-mini API.</li>
-        <li>Send the formatted content and prompt to the API.</li>
-        <li>Handle API responses and errors appropriately.</li>
-        <li>Ensure that the received content is in a format suitable for saving as a PDF.</li>
     </ul>
 </body>
 </html>

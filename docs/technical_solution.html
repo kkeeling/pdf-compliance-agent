@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>508 Compliant PDF Conversion Agent Core Technical Solution</title>
+</head>
+<body>
+    <h1>508 Compliant PDF Conversion Agent Core Technical Solution</h1>
+
+    <h2>Overview</h2>
+    <p>The solution involves creating a command-line tool to process PDF files to ensure they meet Section 508 accessibility compliance. The tool utilizes Python, OpenAI’s GPT-4o-mini LLM model, and a PDF generation function to achieve this.</p>
+
+    <h2>Components and Technologies</h2>
+    <ul>
+        <li><strong>PDF Content Extraction:</strong>
+            <ul>
+                <li><strong>Library:</strong> PyMuPDF (fitz)</li>
+                <li><strong>Purpose:</strong> Retrieve all content from the input PDF, including text, images, and metadata.</li>
+            </ul>
+        </li>
+        <li><strong>Formatting for LLM:</strong>
+            <ul>
+                <li><strong>Process:</strong> Convert extracted content into a structured text format suitable for GPT-4o-mini.</li>
+                <li><strong>Details:</strong> Include headings, lists, tables, and metadata to provide context.</li>
+            </ul>
+        </li>
+        <li><strong>LLM Integration:</strong>
+            <ul>
+                <li><strong>Model:</strong> OpenAI’s GPT-4o-mini.</li>
+                <li><strong>Function:</strong> Analyze the formatted content and provide recommendations or corrections for accessibility compliance.</li>
+                <li><strong>API Interaction:</strong> Use the openai Python library to send prompts and receive responses.</li>
+            </ul>
+        </li>
+        <li><strong>Generate Compliant PDF:</strong>
+            <ul>
+                <li><strong>Function:</strong> generate_pdf</li>
+                <li><strong>Purpose:</strong> Convert the content provided by GPT-4o-mini into a new PDF that meets accessibility standards.</li>
+                <li><strong>Tool Definition:</strong> Define generate_pdf as a tool using OpenAI's schema.</li>
+            </ul>
+        </li>
+    </ul>
+
+    <h2>Detailed Solution</h2>
+    <ol>
+        <li><strong>Setup and Dependencies:</strong>
+            <ul>
+                <li><strong>Python Version:</strong> 3.8 or higher.</li>
+                <li><strong>Libraries:</strong>
+                    <ul>
+                        <li>PyMuPDF (fitz)</li>
+                        <li>pdfminer.six</li>
+                        <li>reportlab</li>
+                        <li>openai</li>
+                    </ul>
+                </li>
+                <li><strong>Environment:</strong> Create a virtual environment and manage dependencies via requirements.txt.</li>
+            </ul>
+        </li>
+        <li><strong>Content Extraction:</strong>
+            <ul>
+                <li><strong>Library:</strong> PyMuPDF (fitz)</li>
+                <li><strong>Functionality:</strong>
+                    <ul>
+                        <li>Extract text, images, and metadata.</li>
+                        <li>Maintain document structure, including headings and lists.</li>
+                    </ul>
+                </li>
+            </ul>
+        </li>
+        <li><strong>Preparing Content for LLM:</strong>
+            <ul>
+                <li><strong>Format Conversion:</strong>
+                    <ul>
+                        <li>Transform extracted content into a structured text format.</li>
+                        <li>Include document metadata and summary.</li>
+                    </ul>
+                </li>
+                <li><strong>Prompt Creation:</strong>
+                    <ul>
+                        <li><strong>System Prompt Example:</strong> 
+                            <pre>
+                            You are an AI model designed to analyze documents for compliance with accessibility standards. Your task is to review the following document and provide recommendations for 508 compliance.
+                            </pre>
+                        </li>
+                        <li><strong>User Prompt Example:</strong> 
+                            <pre>
+                            Please analyze the following document for 508 compliance and provide the content necessary to generate a compliant PDF. Document content:
+                            [Insert Extracted and Formatted Text Here]
+                            </pre>
+                        </li>
+                        <li><strong>Output Expectation:</strong> Indicate that the response should include the content needed for generating a compliant PDF.</li>
+                    </ul>
+                </li>
+            </ul>
+        </li>
+        <li><strong>Integration with GPT-4o-mini API:</strong>
+            <ul>
+                <li><strong>Library:</strong> openai</li>
+                <li><strong>Functionality:</strong>
+                    <ul>
+                        <li>Send the system and user prompts to GPT-4o-mini.</li>
+                        <li>Receive a response containing the content necessary for generating the compliant PDF.</li>
+                    </ul>
+                </li>
+            </ul>
+        </li>
+        <li><strong>Defining and Using the generate_pdf Function:</strong>
+            <ul>
+                <li><strong>Function:</strong> generate_pdf
+                    <ul>
+                        <li><strong>Purpose:</strong> Converts the content provided by GPT-4o-mini into a new PDF file.</li>
+                        <li><strong>Parameters:</strong> Takes the content (text) and output path as input and generates a PDF file.</li>
+                    </ul>
+                </li>
+                <li><strong>Tool Definition:</strong>
+                    <pre>
+                    {
+                      "name": "generate_pdf",
+                      "description": "Generates a PDF file from the provided content.",
+                      "parameters": {
+                        "type": "object",
+                        "properties": {
+                          "content": {
+                            "type": "string",
+                            "description": "The content to be included in the PDF."
+                          },
+                          "output_path": {
+                            "type": "string",
+                            "description": "Path where the generated PDF file will be saved."
+                          }
+                        },
+                        "required": ["content", "output_path"]
+                      }
+                    }
+                    </pre>
+                </li>
+                <li><strong>Model Interaction:</strong>
+                    <ul>
+                        <li>The GPT-4o-mini model will analyze the content and provide a response with the text content necessary for the new PDF.</li>
+                        <li>The response will include the following:
+                            <ul>
+                                <li><strong>content:</strong> The text content to be included in the new PDF.</li>
+                                <li><strong>output_path:</strong> The path where the compliant PDF should be saved.</li>
+                            </ul>
+                        </li>
+                    </ul>
+                </li>
+            </ul>
+        </li>
+        <li><strong>Implementation Workflow:</strong>
+            <ol>
+                <li>Extract content from the input PDF using PyMuPDF.</li>
+                <li>Format the extracted content and create prompts.</li>
+                <li>Send prompts to GPT-4o-mini and receive the content for PDF generation.</li>
+                <li>Call the generate_pdf function with the content and output path from GPT-4o-mini.</li>
+                <li>Save the compliant PDF to the specified output path.</li>
+            </ol>
+        </li>
+    </ol>
+
+    <h2>Notes</h2>
+    <ul>
+        <li>Ensure all dependencies are compatible and avoid conflicts.</li>
+        <li>Include error handling for issues with file paths, API interactions, and PDF generation.</li>
+        <li>Test with a variety of PDF documents to verify accuracy and compliance.</li>
+    </ul>
+</body>
+</html>

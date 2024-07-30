@@ -14,13 +14,45 @@ This project provides a tool for analyzing and converting PDF files to ensure th
   - Add basic structure
   - Improve text contrast
 
-## Installation
+## Requirements
 
-1. Clone this repository
-2. Install the required dependencies:
+- Python 3.8 or higher
+- See `requirements.txt` for a list of required Python packages.
+
+## Setup Instructions
+
+1. Clone the repository:
+   ```
+   git clone <repository-url>
+   cd <project-directory>
+   ```
+
+2. Create a virtual environment:
+   ```
+   python -m venv venv
+   ```
+
+3. Activate the virtual environment:
+   - On Windows:
+     ```
+     venv\Scripts\activate
+     ```
+   - On macOS and Linux:
+     ```
+     source venv/bin/activate
+     ```
+
+4. Install the required dependencies:
    ```
    pip install -r requirements.txt
    ```
+
+5. Verify the installation:
+   ```
+   python -c "import fitz, pdfminer, openai, reportlab; print('All dependencies installed successfully!')"
+   ```
+
+If you encounter any issues during setup, please refer to the individual library documentation or contact the project maintainer.
 
 ## Usage
 
@@ -33,10 +65,6 @@ python pdf_conversion_agent.py input_file.pdf output_file.pdf [--verbose]
 - `input_file.pdf`: Path to the input PDF file
 - `output_file.pdf`: Path to save the compliant PDF file
 - `--verbose`: (Optional) Enable verbose output
-
-## Requirements
-
-See `requirements.txt` for a list of required Python packages.
 
 ## Contributing
 
