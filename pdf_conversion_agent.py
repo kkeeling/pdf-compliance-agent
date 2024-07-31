@@ -17,16 +17,19 @@ import json
 
 def extract_pdf_content(pdf_path):
     """
-    Extract raw text and metadata from a PDF file.
+    Extract raw binary content and metadata from a PDF file.
     
     :param pdf_path: Path to the PDF file
-    :return: A dictionary containing extracted raw content and metadata
+    :return: A dictionary containing extracted raw binary content and metadata
     """
     logger = logging.getLogger('pdf_conversion_agent')
     try:
+        with open(pdf_path, 'rb') as file:
+            binary_content = file.read()
+        
         doc = fitz.open(pdf_path)
         content = {
-            "raw_text": "",
+            "raw_binary": binary_content,
             "metadata": doc.metadata,
         }
         
@@ -35,11 +38,7 @@ def extract_pdf_content(pdf_path):
         content["metadata"]["file_size"] = os.path.getsize(pdf_path)
         content["metadata"]["permissions"] = doc.permissions
         
-        # Extract raw text
-        for page in doc:
-            content["raw_text"] += page.get_text()
-        
-        logger.info(f"Successfully extracted raw content from PDF: {pdf_path}")
+        logger.info(f"Successfully extracted raw binary content from PDF: {pdf_path}")
         return content
     except Exception as e:
         logger.exception(f"Error extracting content from PDF: {pdf_path}")
