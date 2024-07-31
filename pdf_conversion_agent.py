@@ -226,7 +226,7 @@ def call_gpt4o_mini_api(content):
         ]
         
         response = client.chat.completions.create(
-            model="gpt-4o",  # Using GPT-3.5-turbo as a stand-in for GPT-4o-mini
+            model="gpt-4o",
             messages=[
                 {"role": "system", "content": system_prompt},
                 {"role": "user", "content": user_prompt}
