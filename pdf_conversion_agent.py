@@ -100,7 +100,7 @@ def execute_agent(pdf_content):
     """
     Send raw PDF content to GPT-4o API and receive recommendations.
     
-    :param pdf_content: Raw PDF content extracted from the file
+    :param pdf_content: Dictionary containing raw binary content and metadata extracted from the PDF file
     :return: API response containing recommendations and content for PDF generation
     """
     logger = logging.getLogger('pdf_conversion_agent')
@@ -180,9 +180,9 @@ def main():
         if pdf_content:
             logger.info("Content extracted successfully.")
             
-            # Execute Agent with raw PDF content
+            # Execute Agent with PDF content dictionary
             logger.info("Executing Agent...")
-            api_response = execute_agent(pdf_content["raw_binary"])
+            api_response = execute_agent(pdf_content)
             if api_response:
                 logger.info("GPT-4o-mini analysis completed successfully.")
             
