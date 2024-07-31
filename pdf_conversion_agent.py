@@ -12,6 +12,8 @@ from PIL import Image
 import os
 import logging
 from logging.handlers import RotatingFileHandler
+from colorama import Fore, init
+init(autoreset=True)  # Initialize colorama with autoreset
 from fpdf import FPDF
 import json
 
@@ -38,10 +40,10 @@ def extract_pdf_content(pdf_path):
         content["metadata"]["file_size"] = os.path.getsize(pdf_path)
         content["metadata"]["permissions"] = doc.permissions
         
-        logger.info(f"Successfully extracted raw binary content from PDF: {pdf_path}")
+        logger.info(f"{Fore.GREEN}Successfully extracted raw binary content from PDF: {pdf_path}")
         return content
     except Exception as e:
-        logger.error(f"Error extracting content from PDF: {pdf_path}. Reason: {str(e)}")
+        logger.error(f"{Fore.RED}Error extracting content from PDF: {pdf_path}. Reason: {str(e)}")
         return None
 
 
@@ -64,9 +66,9 @@ def generate_pdf(content, output_path):
         
         # Save the PDF file
         pdf.output(output_path, 'F')
-        logger.info(f"PDF generated at {output_path}")
+        logger.info(f"{Fore.GREEN}PDF generated at {output_path}")
     except Exception as e:
-        logger.error(f"Error generating PDF: {output_path}. Reason: {str(e)}")
+        logger.error(f"{Fore.RED}Error generating PDF: {output_path}. Reason: {str(e)}")
 
 def read_system_prompt():
     """
@@ -79,7 +81,7 @@ def read_system_prompt():
         with open('system_prompt.md', 'r') as file:
             return file.read().strip()
     except Exception as e:
-        logger.error(f"Error reading system prompt file. Reason: {str(e)}")
+        logger.error(f"{Fore.RED}Error reading system prompt file. Reason: {str(e)}")
         return None
 
 def read_user_prompt():
@@ -93,7 +95,7 @@ def read_user_prompt():
         with open('user_prompt.md', 'r') as file:
             return file.read().strip()
     except Exception as e:
-        logger.error(f"Error reading user prompt file. Reason: {str(e)}")
+        logger.error(f"{Fore.RED}Error reading user prompt file. Reason: {str(e)}")
         return None
 
 def execute_agent(pdf_content):
@@ -136,11 +138,11 @@ def execute_agent(pdf_content):
         )
         
         api_response = response.choices[0].message
-        logger.info("Successfully received response from GPT-4o-mini API")
+        logger.info(f"{Fore.GREEN}Successfully received response from GPT-4o-mini API")
 
         return api_response.content
     except Exception as e:
-        logger.error(f"Error calling OpenAI API. Reason: {str(e)}")
+        logger.error(f"{Fore.RED}Error calling OpenAI API. Reason: {str(e)}")
         return None
 
 def setup_logging(verbose):
@@ -165,10 +167,10 @@ def setup_logging(verbose):
     return logger
 
 def main():
-    parser = argparse.ArgumentParser(description="508 Compliant PDF Conversion Agent")
-    parser.add_argument("--input", help="Path to the input PDF file")
-    parser.add_argument("--output", help="Path to save the compliant PDF")
-    parser.add_argument("--verbose", action="store_true", help="Enable verbose output")
+    parser = argparse.ArgumentParser(description=f"{Fore.YELLOW}508 Compliant PDF Conversion Agent")
+    parser.add_argument("--input", help=f"{Fore.YELLOW}Path to the input PDF file")
+    parser.add_argument("--output", help=f"{Fore.YELLOW}Path to save the compliant PDF")
+    parser.add_argument("--verbose", action="store_true", help=f"{Fore.YELLOW}Enable verbose output")
     args = parser.parse_args()
 
     logger = setup_logging(args.verbose)
@@ -203,7 +205,7 @@ def main():
         else:
             logger.error("Failed to extract content from PDF.")
     except Exception as e:
-        logger.error(f"An error occurred during PDF conversion: {str(e)}")
+        logger.error(f"{Fore.RED}An error occurred during PDF conversion: {str(e)}")
 
 if __name__ == "__main__":
     main()
