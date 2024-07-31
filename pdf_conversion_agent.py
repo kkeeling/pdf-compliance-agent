@@ -44,39 +44,6 @@ def extract_pdf_content(pdf_path):
         logger.exception(f"Error extracting content from PDF: {pdf_path}")
         return None
 
-def prepare_content_for_gpt(content):
-    """
-    Prepare PDF content for processing by GPT-4o-mini.
-    
-    :param content: Extracted content from the PDF
-    :return: Formatted content as a string
-    """
-    logger = logging.getLogger('pdf_conversion_agent')
-    try:
-        formatted_content = []
-        
-        # Add metadata
-        formatted_content.append(f"Document Title: {content['metadata'].get('title', 'Untitled')}")
-        formatted_content.append(f"Author: {content['metadata'].get('author', 'Unknown')}")
-        formatted_content.append(f"Language: {content['metadata'].get('language', 'Unknown')}")
-        formatted_content.append("\nDocument Overview:")
-        
-        # Add structured content
-        for item_type, item_content in content["structure"]:
-            if item_type == "heading":
-                formatted_content.append(f"\n## {item_content}")
-            elif item_type == "paragraph":
-                formatted_content.append(item_content)
-            elif item_type == "list_item":
-                formatted_content.append(f"  • {item_content}")
-            elif item_type == "image":
-                formatted_content.append("[Image]")
-        
-        logger.info("Successfully prepared content for GPT-4o-mini")
-        return "\n".join(formatted_content)
-    except Exception as e:
-        logger.exception("Error preparing content for GPT-4o-mini")
-        return None
 
 def generate_pdf(content, output_path):
     """
@@ -129,11 +96,11 @@ def read_user_prompt():
         logger.exception("Error reading user prompt file")
         return None
 
-def execute_agent(content):
+def execute_agent(pdf_content):
     """
-    Send content to GPT-4o API and receive recommendations.
+    Send raw PDF content to GPT-4o API and receive recommendations.
     
-    :param content: Formatted content to send to the API
+    :param pdf_content: Raw PDF content extracted from the file
     :return: API response containing recommendations and content for PDF generation
     """
     logger = logging.getLogger('pdf_conversion_agent')
@@ -150,7 +117,13 @@ def execute_agent(content):
             logger.error("Failed to read user prompt.")
             return None
         
-        user_prompt = user_prompt.format(content=content)
+        # Convert binary content to base64 for safe transmission
+        import base64
+        base64_content = base64.b64encode(pdf_content["raw_binary"]).decode('utf-8')
+        
+        # Include metadata in the user prompt
+        metadata_str = json.dumps(pdf_content["metadata"], indent=2)
+        user_prompt = user_prompt.format(content=base64_content, metadata=metadata_str)
 
         response = client.chat.completions.create(
             model="gpt-4o-mini",
@@ -207,13 +180,9 @@ def main():
         if pdf_content:
             logger.info("Content extracted successfully.")
             
-            # Prepare content for GPT-4o-mini
-            logger.info("Preparing content for GPT-4o-mini...")
-            gpt_content = prepare_content_for_gpt(pdf_content)
-            
-            # Execute Agent
+            # Execute Agent with raw PDF content
             logger.info("Executing Agent...")
-            api_response = execute_agent(gpt_content)
+            api_response = execute_agent(pdf_content)
             if api_response:
                 logger.info("GPT-4o-mini analysis completed successfully.")
             
