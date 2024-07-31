@@ -201,6 +201,10 @@ def call_gpt4o_mini_api(content):
         
         user_prompt = user_prompt.format(content=content)
         
+        # Output the user prompt
+        logger.info("User Prompt:")
+        logger.info(user_prompt)
+        
         tools = [
             {
                 "type": "function",
