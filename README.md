@@ -4,7 +4,7 @@ This project provides a tool for analyzing and converting PDF files to ensure th
 
 ## Features
 
-- Extract text from PDF files
+- Extract text and metadata from PDF files
 - Analyze PDF accessibility, including:
   - Missing alt text for images
   - Low-contrast text
@@ -13,6 +13,8 @@ This project provides a tool for analyzing and converting PDF files to ensure th
 - Convert PDFs to a more accessible format:
   - Add basic structure
   - Improve text contrast
+- Colored command-line output for better readability
+- Loading indicator during API calls
 
 ## Requirements
 
@@ -49,7 +51,7 @@ This project provides a tool for analyzing and converting PDF files to ensure th
 
 5. Verify the installation:
    ```
-   python -c "import fitz, pdfminer, openai, reportlab; print('All dependencies installed successfully!')"
+   python -c "import fitz, pdfminer, openai, colorama, halo; print('All dependencies installed successfully!')"
    ```
 
 If you encounter any issues during setup, please refer to the individual library documentation or contact the project maintainer.
@@ -59,12 +61,19 @@ If you encounter any issues during setup, please refer to the individual library
 Run the script from the command line:
 
 ```
-python pdf_conversion_agent.py input_file.pdf output_file.pdf [--verbose]
+python pdf_conversion_agent.py --input input_file.pdf --output output_file.pdf [--verbose]
 ```
 
-- `input_file.pdf`: Path to the input PDF file
-- `output_file.pdf`: Path to save the compliant PDF file
+- `--input input_file.pdf`: Path to the input PDF file
+- `--output output_file.pdf`: Path to save the compliant PDF file
 - `--verbose`: (Optional) Enable verbose output
+
+The script will display colored output in the terminal:
+- Red for errors
+- Yellow for user input requests and argument descriptions
+- Green for non-error output and successful operations
+
+A loading indicator will be displayed while waiting for the GPT-4o-mini API response.
 
 ## Contributing
 
