@@ -308,14 +308,22 @@ def main():
                 logger.info("GPT-4o-mini analysis completed successfully.")
                 if args.verbose:
                     logger.debug(f"API response preview: {api_response[:200]}...")
-                
+            
                 logger.info("GPT-4o-mini Analysis Results:")
                 logger.info(api_response)
+            
+                try:
+                    parsed_response = json.loads(api_response)
+                    compliant_content = parsed_response.get('compliant_content')
                 
-                # Generate compliant PDF
-                if args.output:
-                    logger.info(f"Generating compliant PDF: {args.output}")
-                    generate_pdf(args.output, api_response, pdf_content['metadata'])
+                    # Generate compliant PDF
+                    if args.output and compliant_content:
+                        logger.info(f"Generating compliant PDF: {args.output}")
+                        generate_pdf(compliant_content, args.output)
+                    else:
+                        logger.error("Failed to generate PDF: Missing output path or compliant content.")
+                except json.JSONDecodeError:
+                    logger.error("Failed to parse API response as JSON.")
             else:
                 logger.error("Failed to get response from GPT-4o-mini API.")
         else:
