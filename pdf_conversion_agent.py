@@ -16,6 +16,7 @@ from colorama import Fore, init
 init(autoreset=True)  # Initialize colorama with autoreset
 from fpdf import FPDF
 import json
+from halo import Halo
 
 def extract_pdf_content(pdf_path):
     """
@@ -127,15 +128,16 @@ def execute_agent(pdf_content):
         metadata_str = json.dumps(pdf_content["metadata"], indent=2)
         user_prompt = user_prompt.format(content=base64_content, metadata=metadata_str)
 
-        response = client.chat.completions.create(
-            model="gpt-4o-mini",
-            temperature=0.2,
-            max_tokens=4096,
-            messages=[
-                {"role": "system", "content": system_prompt},
-                {"role": "user", "content": user_prompt}
-            ],
-        )
+        with Halo(text='Executing Agent...', spinner='dots'):
+            response = client.chat.completions.create(
+                model="gpt-4o-mini",
+                temperature=0.2,
+                max_tokens=4096,
+                messages=[
+                    {"role": "system", "content": system_prompt},
+                    {"role": "user", "content": user_prompt}
+                ],
+            )
         
         api_response = response.choices[0].message
         logger.info(f"{Fore.GREEN}Successfully received response from GPT-4o-mini API")
