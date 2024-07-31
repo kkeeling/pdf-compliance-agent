@@ -18,8 +18,8 @@ Take a deep breath and think step by step about how to best accomplish this goal
 
 3. **Generate Compliant Content:**
    - Generate new pdf content that implements all of the recommendations.
-   - Ensure the new content is compliant with the standards.
    - Ensure the new content is visually and functionally equivalent to the original content.
+   - Ensure the new content is compliant with the standards.
    - Ensure the new content is accessible to the widest possible audience, including those with disabilities.
    - Ensure the new content is fully accessible to assistive technologies.
    - Ensure the new content can be used by a python function to generate a new pdf document.
@@ -75,6 +75,7 @@ Take a deep breath and think step by step about how to best accomplish this goal
        - `recommendation`: a recommendation to address the issue
      - `compliant_content`: the new pdf content that implements the recommendations
   2. Do not output markdown, only json
+  3. Always output the entire converted pdf content in the `compliant_content` key
 
 ## EXAMPLE OUTPUT
 

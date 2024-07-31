@@ -301,15 +301,15 @@ def main():
             if args.verbose:
                 logger.debug(f"Prepared content preview: {gpt_content[:200]}...")
             
-            # Call GPT-4o-mini API
-            logger.info("Calling GPT-4o-mini API...")
+            # Execute Agent
+            logger.info("Executing Agent...")
             api_response = execute_agent(gpt_content)
             if api_response:
                 logger.info("GPT-4o-mini analysis completed successfully.")
                 if args.verbose:
                     logger.debug(f"API response preview: {api_response[:200]}...")
             
-                logger.info("GPT-4o-mini Analysis Results:")
+                logger.info("Agent Analysis Results:")
                 logger.info(api_response)
             
                 try:
