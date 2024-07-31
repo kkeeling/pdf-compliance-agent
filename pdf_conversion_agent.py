@@ -182,7 +182,7 @@ def main():
             
             # Execute Agent with raw PDF content
             logger.info("Executing Agent...")
-            api_response = execute_agent(pdf_content)
+            api_response = execute_agent(pdf_content["raw_binary"])
             if api_response:
                 logger.info("GPT-4o-mini analysis completed successfully.")
             
