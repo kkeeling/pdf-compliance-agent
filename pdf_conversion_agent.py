@@ -178,9 +178,9 @@ def read_user_prompt():
         logger.exception("Error reading user prompt file")
         return None
 
-def call_gpt4o_mini_api(content):
+def execute_agent(content):
     """
-    Send content to GPT-4o-mini API and receive recommendations.
+    Send content to GPT-4o API and receive recommendations.
     
     :param content: Formatted content to send to the API
     :return: API response containing recommendations and content for PDF generation
@@ -200,10 +200,6 @@ def call_gpt4o_mini_api(content):
             return None
         
         user_prompt = user_prompt.format(content=content)
-        
-        # Output the user prompt
-        logger.info("User Prompt:")
-        logger.info(user_prompt)
         
         tools = [
             {
@@ -241,15 +237,17 @@ def call_gpt4o_mini_api(content):
         
         api_response = response.choices[0].message
         logger.info("Successfully received response from GPT-4o-mini API")
+
+        return api_response.content
         
-        if api_response.tool_calls:
-            for tool_call in api_response.tool_calls:
-                if tool_call.function.name == "generate_pdf":
-                    function_args = json.loads(tool_call.function.arguments)
-                    generate_pdf(function_args["content"], function_args["output_path"])
-                    return f"PDF generated at {function_args['output_path']}"
-        else:
-            return api_response.content
+        # if api_response.tool_calls:
+        #     for tool_call in api_response.tool_calls:
+        #         if tool_call.function.name == "generate_pdf":
+        #             function_args = json.loads(tool_call.function.arguments)
+        #             generate_pdf(function_args["content"], function_args["output_path"])
+        #             return f"PDF generated at {function_args['output_path']}"
+        # else:
+        #     return api_response.content
     except Exception as e:
         logger.exception("Error calling OpenAI API")
         return None
@@ -305,7 +303,7 @@ def main():
             
             # Call GPT-4o-mini API
             logger.info("Calling GPT-4o-mini API...")
-            api_response = call_gpt4o_mini_api(gpt_content)
+            api_response = execute_agent(gpt_content)
             if api_response:
                 logger.info("GPT-4o-mini analysis completed successfully.")
                 if args.verbose:
