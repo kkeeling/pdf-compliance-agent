@@ -17,20 +17,17 @@ import json
 
 def extract_pdf_content(pdf_path):
     """
-    Extract text, metadata, and structure from a PDF file.
+    Extract raw text and metadata from a PDF file.
     
     :param pdf_path: Path to the PDF file
-    :return: A dictionary containing extracted content, metadata, and structure
+    :return: A dictionary containing extracted raw content and metadata
     """
     logger = logging.getLogger('pdf_conversion_agent')
     try:
         doc = fitz.open(pdf_path)
         content = {
-            "text": [],
+            "raw_text": "",
             "metadata": doc.metadata,
-            "structure": [],
-            "images": [],
-            "tables": []
         }
         
         # Extract additional metadata
@@ -38,56 +35,11 @@ def extract_pdf_content(pdf_path):
         content["metadata"]["file_size"] = os.path.getsize(pdf_path)
         content["metadata"]["permissions"] = doc.permissions
         
-        for page_num, page in enumerate(doc):
-            blocks = page.get_text("dict")["blocks"]
-            for block in blocks:
-                if block["type"] == 0:  # text block
-                    for line in block["lines"]:
-                        text = " ".join([span["text"] for span in line["spans"]])
-                        content["text"].append(text)
-                        # Identify and format headings, paragraphs, and list items
-                        if any(span["size"] > 12 for span in line["spans"]):
-                            content["structure"].append(("heading", text))
-                        elif text.strip().startswith(('•', '-', '*')) or re.match(r'^\d+\.', text.strip()):
-                            content["structure"].append(("list_item", text))
-                        else:
-                            content["structure"].append(("paragraph", text))
-                elif block["type"] == 1:  # image block
-                    images = page.get_images()
-                    for img_index, img in enumerate(images):
-                        xref = img[0]
-                        base_image = doc.extract_image(xref)
-                        if base_image:
-                            image_bytes = base_image["image"]
-                            img_obj = Image.open(io.BytesIO(image_bytes))
-                            alt_text = f"Image {img_index + 1} on page {page_num + 1}"
-                            image_info = {
-                                "page": page_num + 1,
-                                "bbox": block["bbox"],
-                                "size": img_obj.size,
-                                "alt_text": alt_text
-                            }
-                            content["images"].append(image_info)
-                            content["structure"].append(("image", f"[{alt_text}]"))
-            
-            # Extract tables with content
-            tables = page.find_tables()
-            if tables:
-                for table in tables:
-                    table_data = [
-                        [cell.text if cell else "" for cell in row]
-                        for row in table.cells
-                    ]
-                    content["tables"].append({
-                        "page": page_num + 1,
-                        "bbox": table.bbox,
-                        "rows": len(table.cells),
-                        "cols": len(table.cells[0]) if table.cells else 0,
-                        "data": table_data
-                    })
-                    content["structure"].append(("table", f"[Table on page {page_num + 1}]"))
+        # Extract raw text
+        for page in doc:
+            content["raw_text"] += page.get_text()
         
-        logger.info(f"Successfully extracted content from PDF: {pdf_path}")
+        logger.info(f"Successfully extracted raw content from PDF: {pdf_path}")
         return content
     except Exception as e:
         logger.exception(f"Error extracting content from PDF: {pdf_path}")
