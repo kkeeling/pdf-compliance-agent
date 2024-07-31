@@ -41,7 +41,7 @@ def extract_pdf_content(pdf_path):
         logger.info(f"Successfully extracted raw binary content from PDF: {pdf_path}")
         return content
     except Exception as e:
-        logger.exception(f"Error extracting content from PDF: {pdf_path}")
+        logger.error(f"Error extracting content from PDF: {pdf_path}. Reason: {str(e)}")
         return None
 
 
@@ -66,7 +66,7 @@ def generate_pdf(content, output_path):
         pdf.output(output_path, 'F')
         logger.info(f"PDF generated at {output_path}")
     except Exception as e:
-        logger.exception(f"Error generating PDF: {output_path}")
+        logger.error(f"Error generating PDF: {output_path}. Reason: {str(e)}")
 
 def read_system_prompt():
     """
@@ -79,7 +79,7 @@ def read_system_prompt():
         with open('system_prompt.md', 'r') as file:
             return file.read().strip()
     except Exception as e:
-        logger.exception("Error reading system prompt file")
+        logger.error(f"Error reading system prompt file. Reason: {str(e)}")
         return None
 
 def read_user_prompt():
@@ -93,7 +93,7 @@ def read_user_prompt():
         with open('user_prompt.md', 'r') as file:
             return file.read().strip()
     except Exception as e:
-        logger.exception("Error reading user prompt file")
+        logger.error(f"Error reading user prompt file. Reason: {str(e)}")
         return None
 
 def execute_agent(pdf_content):
@@ -140,7 +140,7 @@ def execute_agent(pdf_content):
 
         return api_response.content
     except Exception as e:
-        logger.exception("Error calling OpenAI API")
+        logger.error(f"Error calling OpenAI API. Reason: {str(e)}")
         return None
 
 def setup_logging(verbose):
@@ -203,7 +203,7 @@ def main():
         else:
             logger.error("Failed to extract content from PDF.")
     except Exception as e:
-        logger.exception(f"An error occurred during PDF conversion: {str(e)}")
+        logger.error(f"An error occurred during PDF conversion: {str(e)}")
 
 if __name__ == "__main__":
     main()
