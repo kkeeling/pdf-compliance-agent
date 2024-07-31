@@ -74,8 +74,8 @@ Take a deep breath and think step by step about how to best accomplish this goal
        - `line_number`: the line number of the content
        - `recommendation`: a recommendation to address the issue
      - `compliant_content`: the new pdf content that implements the recommendations
-  2. Do not output markdown, only json
-  3. Always output the entire converted pdf content in the `compliant_content` key
+  2. Always output the entire converted pdf content in the `compliant_content` key
+  3. Do not output any other text or markdown; only the json object
 
 ## EXAMPLE OUTPUT
 

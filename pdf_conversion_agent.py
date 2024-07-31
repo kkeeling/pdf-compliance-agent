@@ -200,54 +200,21 @@ def execute_agent(content):
             return None
         
         user_prompt = user_prompt.format(content=content)
-        
-        tools = [
-            {
-                "type": "function",
-                "function": {
-                    "name": "generate_pdf",
-                    "description": "Generates a PDF file from the provided content.",
-                    "parameters": {
-                        "type": "object",
-                        "properties": {
-                            "content": {
-                                "type": "string",
-                                "description": "The content to be included in the PDF."
-                            },
-                            "output_path": {
-                                "type": "string",
-                                "description": "Path where the generated PDF file will be saved."
-                            }
-                        },
-                        "required": ["content", "output_path"]
-                    }
-                }
-            }
-        ]
-        
+
         response = client.chat.completions.create(
-            model="gpt-4o",
+            model="gpt-4o-mini",
+            temperature=0.2,
+            max_tokens=4096,
             messages=[
                 {"role": "system", "content": system_prompt},
                 {"role": "user", "content": user_prompt}
             ],
-            tools=tools,
-            tool_choice="auto"
         )
         
         api_response = response.choices[0].message
         logger.info("Successfully received response from GPT-4o-mini API")
 
         return api_response.content
-        
-        # if api_response.tool_calls:
-        #     for tool_call in api_response.tool_calls:
-        #         if tool_call.function.name == "generate_pdf":
-        #             function_args = json.loads(tool_call.function.arguments)
-        #             generate_pdf(function_args["content"], function_args["output_path"])
-        #             return f"PDF generated at {function_args['output_path']}"
-        # else:
-        #     return api_response.content
     except Exception as e:
         logger.exception("Error calling OpenAI API")
         return None
@@ -275,7 +242,7 @@ def setup_logging(verbose):
 
 def main():
     parser = argparse.ArgumentParser(description="508 Compliant PDF Conversion Agent")
-    parser.add_argument("input", help="Path to the input PDF file")
+    parser.add_argument("--input", help="Path to the input PDF file")
     parser.add_argument("--output", help="Path to save the compliant PDF")
     parser.add_argument("--verbose", action="store_true", help="Enable verbose output")
     args = parser.parse_args()
@@ -306,8 +273,6 @@ def main():
             api_response = execute_agent(gpt_content)
             if api_response:
                 logger.info("GPT-4o-mini analysis completed successfully.")
-                if args.verbose:
-                    logger.debug(f"API response preview: {api_response[:200]}...")
             
                 logger.info("Agent Analysis Results:")
                 logger.info(api_response)
