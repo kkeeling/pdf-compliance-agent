@@ -266,9 +266,6 @@ def main():
             if api_response:
                 logger.info("GPT-4o-mini analysis completed successfully.")
             
-                logger.info("Agent Analysis Results:")
-                logger.info(api_response)
-            
                 try:
                     parsed_response = json.loads(api_response)
                     compliant_content = parsed_response.get('compliant_content')
