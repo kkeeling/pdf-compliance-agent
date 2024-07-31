@@ -255,18 +255,10 @@ def main():
         pdf_content = extract_pdf_content(args.input)
         if pdf_content:
             logger.info("Content extracted successfully.")
-            if args.verbose:
-                logger.debug(f"Extracted text preview: {pdf_content['text'][:200]}...")
-                logger.debug(f"Document metadata: {pdf_content['metadata']}")
-                logger.debug(f"Number of images detected: {len(pdf_content['images'])}")
-                logger.debug(f"Number of tables detected: {len(pdf_content['tables'])}")
-                logger.debug(f"Document structure preview: {pdf_content['structure'][:10]}")
             
             # Prepare content for GPT-4o-mini
             logger.info("Preparing content for GPT-4o-mini...")
             gpt_content = prepare_content_for_gpt(pdf_content)
-            if args.verbose:
-                logger.debug(f"Prepared content preview: {gpt_content[:200]}...")
             
             # Execute Agent
             logger.info("Executing Agent...")
