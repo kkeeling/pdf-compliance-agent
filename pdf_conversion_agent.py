@@ -177,16 +177,16 @@ def main():
 
     try:
         # Extract PDF content
-        logger.info("Extracting PDF content...")
+        logger.info(f"{Fore.GREEN}Extracting PDF content...")
         pdf_content = extract_pdf_content(args.input)
         if pdf_content:
-            logger.info("Content extracted successfully.")
+            logger.info(f"{Fore.GREEN}Content extracted successfully.")
             
             # Execute Agent with PDF content dictionary
-            logger.info("Executing Agent...")
+            logger.info(f"{Fore.GREEN}Executing Agent...")
             api_response = execute_agent(pdf_content)
             if api_response:
-                logger.info("GPT-4o-mini analysis completed successfully.")
+                logger.info(f"{Fore.GREEN}GPT-4o-mini analysis completed successfully.")
             
                 try:
                     parsed_response = json.loads(api_response)
@@ -194,7 +194,7 @@ def main():
                 
                     # Generate compliant PDF
                     if args.output and compliant_content:
-                        logger.info(f"Generating compliant PDF: {args.output}")
+                        logger.info(f"{Fore.GREEN}Generating compliant PDF: {args.output}")
                         generate_pdf(compliant_content, args.output)
                     else:
                         logger.error("Failed to generate PDF: Missing output path or compliant content.")
