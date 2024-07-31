@@ -13,10 +13,11 @@ import os
 import logging
 from logging.handlers import RotatingFileHandler
 from colorama import Fore, init
-init(autoreset=True)  # Initialize colorama with autoreset
 from fpdf import FPDF
 import json
 from halo import Halo
+
+init(autoreset=True)  # Initialize colorama with autoreset
 
 def extract_pdf_content(pdf_path):
     """
