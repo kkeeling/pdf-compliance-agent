@@ -16,6 +16,7 @@ from colorama import Fore, init
 from fpdf import FPDF
 import json
 from halo import Halo
+from routellm import Controller
 
 init(autoreset=True)  # Initialize colorama with autoreset
 
@@ -102,14 +103,19 @@ def read_user_prompt():
 
 def execute_agent(pdf_content):
     """
-    Send raw PDF content to GPT-4o API and receive recommendations.
+    Send raw PDF content to the appropriate LLM based on file size using RouteLLM.
     
     :param pdf_content: Dictionary containing raw binary content and metadata extracted from the PDF file
     :return: API response containing recommendations and content for PDF generation
     """
     logger = logging.getLogger('pdf_conversion_agent')
     try:
-        client = OpenAI()
+        # Initialize RouteLLM controller
+        controller = Controller(
+            routers=["mf"],
+            strong_model="gemini-pro",
+            weak_model="gpt-4o-mini",
+        )
         
         system_prompt = read_system_prompt()
         if system_prompt is None:
@@ -129,9 +135,14 @@ def execute_agent(pdf_content):
         metadata_str = json.dumps(pdf_content["metadata"], indent=2)
         user_prompt = user_prompt.format(content=base64_content, metadata=metadata_str)
 
+        # Determine the appropriate model based on file size
+        file_size = pdf_content["metadata"]["file_size"]
+        threshold = 1024 * 1024  # 1 MB threshold, adjust as needed
+        model = "router-mf-0.5" if file_size > threshold else "router-mf-0.1"
+
         with Halo(text='Executing Agent...', spinner='dots'):
-            response = client.chat.completions.create(
-                model="gpt-4o-mini",
+            response = controller.chat.completions.create(
+                model=model,
                 temperature=0.2,
                 max_tokens=4096,
                 messages=[
@@ -141,11 +152,11 @@ def execute_agent(pdf_content):
             )
         
         api_response = response.choices[0].message
-        logger.info(f"{Fore.GREEN}Successfully received response from GPT-4o-mini API")
+        logger.info(f"{Fore.GREEN}Successfully received response from RouteLLM")
 
         return api_response.content
     except Exception as e:
-        logger.error(f"{Fore.RED}Error calling OpenAI API. Reason: {str(e)}")
+        logger.error(f"{Fore.RED}Error calling RouteLLM. Reason: {str(e)}")
         return None
 
 def setup_logging(verbose):
