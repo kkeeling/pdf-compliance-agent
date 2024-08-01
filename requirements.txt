@@ -14,3 +14,4 @@ fpdf==1.7.2
 # Install dependencies: pip install -r requirements.txt
 colorama
 halo
+routellm==0.1.0
