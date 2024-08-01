@@ -110,8 +110,14 @@ def execute_agent(pdf_content):
     """
     logger = logging.getLogger('pdf_conversion_agent')
     try:
+        # Get the API key from environment variable
+        api_key = os.getenv('API_KEY')
+        if not api_key:
+            logger.error("API_KEY environment variable is not set.")
+            return None
+
         # Configure the Gemini API
-        genai.configure(api_key=os.environ['API_KEY'])
+        genai.configure(api_key=api_key)
         
         # Initialize the Gemini model
         model = genai.GenerativeModel('gemini-1.5-pro')
