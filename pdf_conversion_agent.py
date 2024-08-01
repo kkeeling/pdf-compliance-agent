@@ -16,7 +16,7 @@ from colorama import Fore, init
 from fpdf import FPDF
 import json
 from halo import Halo
-from routellm import RouteLLM
+from routellm.routellm import RouteLLM
 
 init(autoreset=True)  # Initialize colorama with autoreset
 
