@@ -16,7 +16,7 @@ from colorama import Fore, init
 from fpdf import FPDF
 import json
 from halo import Halo
-from routellm import Controller
+from routellm import RouteLLM
 
 init(autoreset=True)  # Initialize colorama with autoreset
 
@@ -110,9 +110,9 @@ def execute_agent(pdf_content):
     """
     logger = logging.getLogger('pdf_conversion_agent')
     try:
-        # Initialize RouteLLM controller
-        controller = Controller(
-            routers=["mf"],
+        # Initialize RouteLLM
+        routellm = RouteLLM(
+            router="mf",
             strong_model="gemini-pro",
             weak_model="gpt-4o-mini",
         )
@@ -136,19 +136,16 @@ def execute_agent(pdf_content):
         user_prompt = user_prompt.format(content=base64_content, metadata=metadata_str)
 
         with Halo(text='Executing Agent...', spinner='dots'):
-            response = controller.chat.completions.create(
+            response = routellm.chat(
+                system_prompt=system_prompt,
+                user_prompt=user_prompt,
                 temperature=0.2,
                 max_tokens=4096,
-                messages=[
-                    {"role": "system", "content": system_prompt},
-                    {"role": "user", "content": user_prompt}
-                ],
             )
         
-        api_response = response.choices[0].message
         logger.info(f"{Fore.GREEN}Successfully received response from RouteLLM")
 
-        return api_response.content
+        return response
     except Exception as e:
         logger.error(f"{Fore.RED}Error calling RouteLLM. Reason: {str(e)}")
         return None
