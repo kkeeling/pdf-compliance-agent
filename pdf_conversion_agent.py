@@ -113,10 +113,18 @@ def execute_agent(pdf_content):
         # Initialize Controller
         client = Controller(
             routers=["mf"],
-            models={
-                "strong": "gemini-pro",
-                "weak": "gpt-4o-mini"
-            }
+            strong_model="gemini/gemini-pro",
+            weak_model="gpt-4o-mini",
+            config = {
+                "mf": {
+                    "checkpoint_path": "routellm/mf_gpt4_augmented"
+                }
+            },
+            # Override API base and key for LLM calls
+            api_base=None,
+            api_key=None,
+            # Display a progress bar for operations
+            progress_bar=False
         )
         
         system_prompt = read_system_prompt()
