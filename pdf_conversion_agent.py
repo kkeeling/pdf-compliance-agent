@@ -103,7 +103,7 @@ def read_user_prompt():
 
 def execute_agent(pdf_content):
     """
-    Send raw PDF content to the appropriate LLM based on file size using RouteLLM.
+    Send raw PDF content to RouteLLM for processing.
     
     :param pdf_content: Dictionary containing raw binary content and metadata extracted from the PDF file
     :return: API response containing recommendations and content for PDF generation
@@ -135,14 +135,8 @@ def execute_agent(pdf_content):
         metadata_str = json.dumps(pdf_content["metadata"], indent=2)
         user_prompt = user_prompt.format(content=base64_content, metadata=metadata_str)
 
-        # Determine the appropriate model based on file size
-        file_size = pdf_content["metadata"]["file_size"]
-        threshold = 1024 * 1024  # 1 MB threshold, adjust as needed
-        model = "router-mf-0.5" if file_size > threshold else "router-mf-0.1"
-
         with Halo(text='Executing Agent...', spinner='dots'):
             response = controller.chat.completions.create(
-                model=model,
                 temperature=0.2,
                 max_tokens=4096,
                 messages=[
