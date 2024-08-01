@@ -6,4 +6,4 @@ Pillow==10.0.0
 fpdf==1.7.2
 colorama
 halo
-routellm[serve,eval]
+google-generativeai
