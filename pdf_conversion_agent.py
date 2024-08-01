@@ -16,7 +16,7 @@ from colorama import Fore, init
 from fpdf import FPDF
 import json
 from halo import Halo
-from routellm.controller import Controller
+import google.generativeai as genai
 
 init(autoreset=True)  # Initialize colorama with autoreset
 
@@ -103,29 +103,18 @@ def read_user_prompt():
 
 def execute_agent(pdf_content):
     """
-    Send raw PDF content to RouteLLM for processing.
+    Send raw PDF content to Gemini API for processing.
     
     :param pdf_content: Dictionary containing raw binary content and metadata extracted from the PDF file
     :return: API response containing recommendations and content for PDF generation
     """
     logger = logging.getLogger('pdf_conversion_agent')
     try:
-        # Initialize Controller
-        client = Controller(
-            routers=["mf"],
-            strong_model="gemini/gemini-pro",
-            weak_model="gpt-4o-mini",
-            config = {
-                "mf": {
-                    "checkpoint_path": "routellm/mf_gpt4_augmented"
-                }
-            },
-            # Override API base and key for LLM calls
-            api_base=None,
-            api_key=None,
-            # Display a progress bar for operations
-            progress_bar=False
-        )
+        # Configure the Gemini API
+        genai.configure(api_key=os.environ['API_KEY'])
+        
+        # Initialize the Gemini model
+        model = genai.GenerativeModel('gemini-1.5-pro')
         
         system_prompt = read_system_prompt()
         if system_prompt is None:
@@ -146,21 +135,22 @@ def execute_agent(pdf_content):
         user_prompt = user_prompt.format(content=base64_content, metadata=metadata_str)
 
         with Halo(text='Executing Agent...', spinner='dots'):
-            response = client.chat.completions.create(
-                model="router-mf-0.11593",
-                messages=[
+            response = model.generate_content(
+                [
                     {"role": "system", "content": system_prompt},
                     {"role": "user", "content": user_prompt}
                 ],
-                temperature=0.2,
-                max_tokens=4096
+                generation_config=genai.GenerationConfig(
+                    temperature=0.2,
+                    max_output_tokens=4096
+                )
             )
         
-        logger.info(f"{Fore.GREEN}Successfully received response from RouteLLM")
+        logger.info(f"{Fore.GREEN}Successfully received response from Gemini API")
 
-        return response.choices[0].message.content
+        return response.text
     except Exception as e:
-        logger.error(f"{Fore.RED}Error calling RouteLLM. Reason: {str(e)}")
+        logger.error(f"{Fore.RED}Error calling Gemini API. Reason: {str(e)}")
         return None
 
 def setup_logging(verbose):
