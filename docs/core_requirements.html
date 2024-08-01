@@ -13,12 +13,12 @@
         h1 {
             color: #333;
         }
-        p {
-            margin: 0 0 10px;
-        }
         ul {
             margin: 0 0 10px;
             padding-left: 20px;
+        }
+        li {
+            margin-bottom: 10px;
         }
         code {
             background-color: #f4f4f4;
@@ -29,49 +29,75 @@
 </head>
 <body>
     <h1>508 Compliant PDF Conversion Agent Core Requirements</h1>
-    <p>The following are the core requirements for the 508 Compliant PDF Conversion Agent:</p>
+
+    <h2>General Requirements</h2>
     <ul>
-        <li><strong>Command-Line Interface (CLI):</strong> 
+        <li>The tool must extract content from PDF files, including raw binary data and metadata.</li>
+        <li>It must analyze the extracted content for compliance with Section 508 accessibility standards.</li>
+        <li>The analysis should include a thorough review to identify any compliance issues, with a specific focus on WCAG 2.1 Level AA success criteria and PDF/UA (ISO 14289) standards.</li>
+    </ul>
+
+    <h2>Content Extraction Requirements</h2>
+    <ul>
+        <li>Extract all text, images, and metadata from the PDF.</li>
+        <li>Preserve the original document's structure, including headings, lists, tables, and other elements.</li>
+        <li>Store the extracted content as raw binary data for processing by the LLM.</li>
+    </ul>
+
+    <h2>Analysis and Compliance Requirements</h2>
+    <ul>
+        <li>Use RouteLLM to route the content to the appropriate LLM model based on the size of the PDF:
             <ul>
-                <li>Should accept input and output file paths.</li>
-                <li>Optional: Include a verbose flag for detailed logging.</li>
+                <li>Google's Gemini-Pro for large files (strong model).</li>
+                <li>OpenAI's GPT-4o-mini for smaller files (weak model).</li>
             </ul>
         </li>
-        <li><strong>PDF Content Extraction:</strong>
+        <li>Generate a detailed list of compliance issues, including:
             <ul>
-                <li>Extract all text from the PDF, including text from images using OCR if necessary.</li>
-                <li>Maintain the document’s structure, including headings, lists, and tables.</li>
-                <li>Extract document metadata such as title, author, and language.</li>
+                <li>Description of each issue.</li>
+                <li>Specific content violating the standards.</li>
+                <li>Page number and line number where the issue occurs.</li>
+                <li>Recommendations for addressing the issues.</li>
             </ul>
         </li>
-        <li><strong>Content Preparation for GPT-4o-mini:</strong>
+        <li>Provide new, compliant content that addresses all identified issues while maintaining the document's original intent and usability.</li>
+    </ul>
+
+    <h2>Output Requirements</h2>
+    <ul>
+        <li>Output a JSON object containing:
             <ul>
-                <li>Convert extracted content into plain text format.</li>
-                <li>Include relevant document structure and metadata in the prompt for compliance processing.</li>
+                <li><code>issues</code>: A list of issues found in the PDF with descriptions, specific content, page and line numbers, and recommendations.</li>
+                <li><code>compliant_content</code>: The new content that implements the recommendations.</li>
             </ul>
         </li>
-        <li><strong>Integration with GPT-4o-mini:</strong>
+        <li>Ensure the generated compliant PDF is visually and functionally equivalent to the original, with enhanced accessibility features.</li>
+        <li>All output must be structured to ensure full compatibility with assistive technologies.</li>
+    </ul>
+
+    <h2>Compliance Standards</h2>
+    <ul>
+        <li>Ensure PDFs meet WCAG 2.1 Level AA success criteria, including:
             <ul>
-                <li>Send the formatted content to the GPT-4o-mini API for analysis and compliance corrections.</li>
-                <li>Receive and handle API responses containing compliant content.</li>
+                <li>Providing text alternatives for non-text content.</li>
+                <li>Making all functionality available from a keyboard.</li>
+                <li>Giving users enough time to read and use content.</li>
+                <li>Not using content that causes seizures or physical reactions.</li>
+                <li>Providing ways to help users navigate and find content.</li>
+                <li>Making text content readable and understandable.</li>
+                <li>Making content appear and operate in predictable ways.</li>
+                <li>Maximizing compatibility with current and future user tools.</li>
             </ul>
         </li>
-        <li><strong>PDF Output Generation:</strong>
+        <li>Ensure PDFs conform to PDF/UA (ISO 14289) standards, including:
             <ul>
-                <li>Use `reportlab` or similar library to create a new PDF with compliant content.</li>
-                <li>Ensure that the final PDF maintains the original layout as much as possible.</li>
-            </ul>
-        </li>
-        <li><strong>Performance and Accuracy:</strong>
-            <ul>
-                <li>Optimize extraction and API interaction for efficiency.</li>
-                <li>Validate that the output PDF meets all Section 508 compliance standards.</li>
-            </ul>
-        </li>
-        <li><strong>Documentation:</strong>
-            <ul>
-                <li>Provide clear installation, usage instructions, and examples.</li>
-                <li>Include guidance on preparing PDFs for processing.</li>
+                <li>Correct tagging of all real content and artifacts.</li>
+                <li>A logical reading order in the tag structure.</li>
+                <li>Using standard PDF tags and mapping custom tags.</li>
+                <li>Providing alternative text for images and other non-text elements.</li>
+                <li>Specifying the natural language of the document.</li>
+                <li>Having a document title in the metadata.</li>
+                <li>Appropriate security settings that do not interfere with assistive technology.</li>
             </ul>
         </li>
     </ul>

@@ -13,105 +13,107 @@
         h1 {
             color: #333;
         }
-        h2 {
-            color: #555;
-            margin-top: 20px;
-        }
-        p {
-            margin: 0 0 10px;
-        }
-        ul {
+        ul, ol {
             margin: 0 0 10px;
             padding-left: 20px;
         }
-        code {
-            background-color: #f4f4f4;
-            padding: 2px 4px;
-            border-radius: 3px;
+        li {
+            margin-bottom: 10px;
+        }
+        p {
+            margin: 0 0 10px;
         }
     </style>
 </head>
 <body>
     <h1>508 Compliant PDF Conversion Agent Project Plan</h1>
-    
-    <h2>Week 1: Planning and Preparation</h2>
-    <h3>Day 1-2: Planning</h3>
+
+    <h2>Week 1: Initial Setup and Prototype Development</h2>
+    <p><strong>Completed:</strong></p>
     <ul>
-        <li><strong>Product Manager:</strong> Define project goals, detailed requirements, and success criteria. Finalize feature set based on compliance requirements and user needs.</li>
-        <li><strong>Developer & Tester:</strong> Review requirements and proposed solution. Familiarize with tools and libraries.</li>
+        <li>Set up the initial project environment and dependencies.</li>
+        <li>Extracted metadata and raw binary content from PDF files using PyMuPDF and pdfminer.</li>
+        <li>Implemented basic command-line interface (CLI) functionalities.</li>
+        <li>Integrated GPT-4o-mini for analyzing PDF content.</li>
+        <li>Generated a compliant PDF using the provided content from the LLM.</li>
+        <li>Set up logging and verbose mode for detailed output.</li>
     </ul>
-    
-    <h3>Day 3-5: Initial Setup and Design</h3>
+
+    <h2>Week 2: Integrate RouteLLM and Finalize Model Integration</h2>
+    <p><strong>Objective:</strong> Integrate RouteLLM for routing AI requests between strong and weak models, based on the size of the PDF files.</p>
     <ul>
-        <li><strong>Product Manager:</strong> Develop detailed user stories and acceptance criteria. Create initial project documentation.</li>
-        <li><strong>Developer:</strong> Set up the development environment, including installing Python libraries (`PyMuPDF`, `pdfminer.six`, `reportlab`), and configuring access to the GPT-4o-mini API.</li>
-        <li><strong>Tester:</strong> Develop test cases based on user stories and acceptance criteria. Set up testing environment.</li>
+        <li><strong>Integrate RouteLLM:</strong> 
+            <ul>
+                <li>Set up and configure RouteLLM for routing requests between Google's Gemini-Pro and OpenAI's GPT-4o-mini.</li>
+                <li>Ensure RouteLLM routes larger files to Gemini-Pro and smaller files to GPT-4o-mini.</li>
+            </ul>
+        </li>
+        <li><strong>Model Selection Logic:</strong> 
+            <ul>
+                <li>Implement logic within RouteLLM to determine the appropriate model based on PDF file size.</li>
+                <li>Ensure correct routing and model selection without errors.</li>
+            </ul>
+        </li>
+        <li><strong>Testing and Validation:</strong> 
+            <ul>
+                <li>Test the integrated RouteLLM with various PDF files to verify accurate routing and responses.</li>
+                <li>Validate the model's outputs against the compliance requirements specified in the system prompt.</li>
+            </ul>
+        </li>
     </ul>
-    
-    <h2>Week 2: Sprint 1 - Core Functionality</h2>
-    <h3>Day 1-2: Implementation</h3>
+
+    <h2>Week 3: Enhance Functionality and Improve Compliance Analysis</h2>
+    <p><strong>Objective:</strong> Enhance the tool's analysis capabilities and refine the output generation process.</p>
     <ul>
-        <li><strong>Developer:</strong> Implement PDF content extraction (text and metadata) using `PyMuPDF` or `pdfminer.six`. Develop the command-line interface (CLI) to handle input and output file paths.</li>
-        <li><strong>Product Manager:</strong> Monitor progress and address any blockers.</li>
+        <li><strong>Enhance Compliance Analysis:</strong> 
+            <ul>
+                <li>Improve the system's ability to identify and detail compliance issues.</li>
+                <li>Ensure recommendations provided are specific and actionable.</li>
+            </ul>
+        </li>
+        <li><strong>Refine Output Handling:</strong> 
+            <ul>
+                <li>Ensure the JSON output includes a detailed list of issues, content violations, recommendations, and compliant content.</li>
+                <li>Improve the process for generating the compliant PDF from the JSON response.</li>
+            </ul>
+        </li>
+        <li><strong>User Testing and Feedback:</strong> 
+            <ul>
+                <li>Conduct user testing to gather feedback on the tool's usability and accuracy.</li>
+                <li>Make adjustments based on user feedback to improve the tool's performance and user experience.</li>
+            </ul>
+        </li>
     </ul>
-    
-    <h3>Day 3-5: Integration and Testing</h3>
+
+    <h2>Week 4: Finalization and Documentation</h2>
+    <p><strong>Objective:</strong> Finalize the project, including thorough testing, comprehensive documentation, and preparation for deployment.</p>
     <ul>
-        <li><strong>Developer:</strong> Integrate with GPT-4o-mini for processing the extracted content. Implement functionality to receive and write the compliant PDF content.</li>
-        <li><strong>Tester:</strong> Begin initial testing of PDF extraction and CLI functionalities. Develop and execute test cases for the extracted content and CLI.</li>
-    </ul>
-    
-    <h3>End of Week 1 Review Meeting</h3>
-    <ul>
-        <li><strong>Product Manager:</strong> Review progress, gather feedback, and adjust plans if necessary.</li>
-        <li><strong>Developer & Tester:</strong> Discuss challenges and improvements.</li>
-    </ul>
-    
-    <h2>Week 3: Sprint 2 - Refinement and Enhancements</h2>
-    <h3>Day 1-2: Refinements</h3>
-    <ul>
-        <li><strong>Developer:</strong> Refine the integration with GPT-4o-mini based on feedback. Enhance error handling and performance optimizations.</li>
-        <li><strong>Tester:</strong> Continue testing core functionalities. Start testing integrated features.</li>
-    </ul>
-    
-    <h3>Day 3-5: Additional Features and Testing</h3>
-    <ul>
-        <li><strong>Developer:</strong> Implement additional features based on initial feedback (e.g., verbosity options, additional configuration settings).</li>
-        <li><strong>Tester:</strong> Conduct thorough testing, including edge cases and performance testing. Report bugs and issues to the developer.</li>
-    </ul>
-    
-    <h3>End of Week 2 Review Meeting</h3>
-    <ul>
-        <li><strong>Product Manager:</strong> Review sprint outcomes, prioritize any additional changes or fixes.</li>
-        <li><strong>Developer & Tester:</strong> Discuss feedback, plan for next sprint.</li>
-    </ul>
-    
-    <h2>Week 4: Sprint 3 - Finalization and Documentation</h2>
-    <h3>Day 1-2: Final Adjustments</h3>
-    <ul>
-        <li><strong>Developer:</strong> Address any remaining bugs and issues. Finalize documentation, including installation and usage instructions.</li>
-        <li><strong>Tester:</strong> Conduct final round of testing to ensure all issues are resolved. Validate that the final product meets all acceptance criteria.</li>
-    </ul>
-    
-    <h3>Day 3-4: Documentation and Training</h3>
-    <ul>
-        <li><strong>Product Manager:</strong> Finalize and review user documentation and training materials.</li>
-        <li><strong>Developer:</strong> Prepare and deliver a demonstration of the tool’s features.</li>
-        <li><strong>Tester:</strong> Assist in preparing test results and documentation.</li>
-    </ul>
-    
-    <h3>Day 5: Project Closure</h3>
-    <ul>
-        <li><strong>Product Manager:</strong> Conduct a final review meeting to ensure all deliverables are met. Collect feedback and assess project success.</li>
-        <li><strong>Developer & Tester:</strong> Wrap up any remaining tasks and hand over the project to the Product Manager.</li>
-    </ul>
-    
-    <h2>Deliverables</h2>
-    <ul>
-        <li><strong>End of Week 1:</strong> Initial setup, core functionalities implemented, and initial testing results.</li>
-        <li><strong>End of Week 2:</strong> Refined features, integrated GPT-4o-mini, and updated testing results.</li>
-        <li><strong>End of Week 3:</strong> Finalized features, complete documentation, and thorough testing.</li>
-        <li><strong>End of Week 4:</strong> Final product, complete documentation, and project closure.</li>
+        <li><strong>Final Testing and QA:</strong> 
+            <ul>
+                <li>Conduct comprehensive testing, including edge cases and stress testing with various PDF sizes and content types.</li>
+                <li>Ensure stability and robustness of the tool under different conditions.</li>
+                <li>Fix any bugs or issues identified during testing.</li>
+            </ul>
+        </li>
+        <li><strong>Documentation and User Guides:</strong> 
+            <ul>
+                <li>Develop detailed documentation, including installation guides, usage instructions, and troubleshooting tips.</li>
+                <li>Include examples and best practices for using the tool effectively.</li>
+            </ul>
+        </li>
+        <li><strong>Deployment Preparation:</strong> 
+            <ul>
+                <li>Prepare the tool for deployment, including packaging and deployment scripts.</li>
+                <li>Create a deployment-ready package with all necessary components.</li>
+                <li>Provide instructions for installation and setup on different platforms.</li>
+            </ul>
+        </li>
+        <li><strong>Final Review and Handover:</strong> 
+            <ul>
+                <li>Conduct a final review and handover session with stakeholders.</li>
+                <li>Ensure stakeholder satisfaction and complete handover documentation.</li>
+            </ul>
+        </li>
     </ul>
 </body>
 </html>
