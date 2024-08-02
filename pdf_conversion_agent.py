@@ -19,6 +19,7 @@ from halo import Halo
 import google.generativeai as genai
 from google.generativeai.types import HarmCategory, HarmBlockThreshold
 import mimetypes
+from google.api_core import exceptions as google_exceptions
 
 init(autoreset=True)  # Initialize colorama with autoreset
 
@@ -45,6 +46,20 @@ def upload_pdf_to_gemini(pdf_path):
         logger.error(f"{Fore.RED}Error uploading PDF: {pdf_path}. Reason: {str(e)}")
         return None
 
+def delete_uploaded_file(file):
+    """
+    Delete the uploaded file from Gemini API.
+    
+    :param file: File object containing the uploaded file's metadata
+    """
+    logger = logging.getLogger('pdf_conversion_agent')
+    try:
+        genai.delete_file(file.file_id)
+        logger.info(f"{Fore.GREEN}Successfully deleted uploaded file from Gemini API")
+    except google_exceptions.NotFound:
+        logger.warning(f"{Fore.YELLOW}File not found on Gemini API. It may have already been deleted.")
+    except Exception as e:
+        logger.error(f"{Fore.RED}Error deleting uploaded file from Gemini API. Reason: {str(e)}")
 
 def generate_pdf(content, output_path):
     """
@@ -236,8 +251,12 @@ def main():
                     logger.error("Failed to parse API response as JSON.")
             else:
                 logger.error("Failed to get response from GPT-4o-mini API.")
+            
+            # Delete the uploaded file from Gemini API
+            logger.info(f"{Fore.GREEN}Deleting uploaded file from Gemini API...")
+            delete_uploaded_file(uploaded_file)
         else:
-            logger.error("Failed to extract content from PDF.")
+            logger.error("Failed to upload PDF to Gemini API.")
     except Exception as e:
         logger.error(f"{Fore.RED}An error occurred during PDF conversion: {str(e)}")
 
