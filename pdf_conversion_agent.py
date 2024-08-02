@@ -17,6 +17,7 @@ from fpdf import FPDF
 import json
 from halo import Halo
 import google.generativeai as genai
+from google.generativeai.types import HarmCategory, HarmBlockThreshold
 
 init(autoreset=True)  # Initialize colorama with autoreset
 
@@ -111,9 +112,9 @@ def execute_agent(pdf_content):
     logger = logging.getLogger('pdf_conversion_agent')
     try:
         # Get the API key from environment variable
-        api_key = os.getenv('API_KEY')
+        api_key = os.getenv('GOOGLE_API_KEY')
         if not api_key:
-            logger.error("API_KEY environment variable is not set.")
+            logger.error("GOOGLE_API_KEY environment variable is not set.")
             return None
 
         # Configure the Gemini API
@@ -140,7 +141,36 @@ def execute_agent(pdf_content):
         metadata_str = json.dumps(pdf_content["metadata"], indent=2)
         user_prompt = user_prompt.format(content=base64_content, metadata=metadata_str)
 
+        safety_settings = [
+            {
+                "category": HarmCategory.HARM_CATEGORY_HARASSMENT,
+                "threshold": HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE,
+            },
+            {
+                "category": HarmCategory.HARM_CATEGORY_HATE_SPEECH,
+                "threshold": HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE,
+            },
+            {
+                "category": HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT,
+                "threshold": HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE,
+            },
+            {
+                "category": HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT,
+                "threshold": HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE,
+            },
+        ]
+
         with Halo(text='Executing Agent...', spinner='dots'):
+            response = model.generate_content(
+                prompt=system_prompt + user_prompt,
+                safety_settings=safety_settings,
+                generation_config=genai.types.GenerationConfig(
+                    temperature=0.2,
+                    top_p=1,
+                    top_k=32,
+                    max_output_tokens=2048,
+                )
+            )
             response = model.generate_content(
                 [
                     {"role": "system", "content": system_prompt},
