@@ -45,15 +45,6 @@ def upload_pdf_to_gemini(pdf_path):
         logger.error(f"{Fore.RED}Error uploading PDF: {pdf_path}. Reason: {str(e)}")
         return None
 
-def extract_pdf_content(pdf_path):
-    """
-    Extract content from a PDF file by uploading it to the Gemini API.
-    
-    :param pdf_path: Path to the PDF file
-    :return: A File object containing the uploaded file's metadata
-    """
-    return upload_pdf_to_gemini(pdf_path)
-
 
 def generate_pdf(content, output_path):
     """
@@ -106,11 +97,11 @@ def read_user_prompt():
         logger.error(f"{Fore.RED}Error reading user prompt file. Reason: {str(e)}")
         return None
 
-def execute_agent(pdf_content):
+def execute_agent(uploaded_file):
     """
-    Send raw PDF content to Gemini API for processing.
+    Send uploaded PDF file to Gemini API for processing.
     
-    :param pdf_content: Dictionary containing raw binary content and metadata extracted from the PDF file
+    :param uploaded_file: File object containing the uploaded file's metadata
     :return: API response containing recommendations and content for PDF generation
     """
     logger = logging.getLogger('pdf_conversion_agent')
@@ -137,13 +128,8 @@ def execute_agent(pdf_content):
             logger.error("Failed to read user prompt.")
             return None
         
-        # Convert binary content to base64 for safe transmission
-        import base64
-        base64_content = base64.b64encode(pdf_content["raw_binary"]).decode('utf-8')
-        
-        # Include metadata in the user prompt
-        metadata_str = json.dumps(pdf_content["metadata"], indent=2)
-        user_prompt = user_prompt.format(content=base64_content, metadata=metadata_str)
+        # Include uploaded file in the user prompt
+        user_prompt = user_prompt.format(uploaded_file=uploaded_file)
 
         safety_settings = [
             {
@@ -224,15 +210,15 @@ def main():
     logger = setup_logging(args.verbose)
 
     try:
-        # Extract PDF content
-        logger.info(f"{Fore.GREEN}Extracting PDF content...")
-        pdf_content = extract_pdf_content(args.input)
-        if pdf_content:
-            logger.info(f"{Fore.GREEN}Content extracted successfully.")
+        # Upload PDF to Gemini
+        logger.info(f"{Fore.GREEN}Uploading PDF to Gemini...")
+        uploaded_file = upload_pdf_to_gemini(args.input)
+        if uploaded_file:
+            logger.info(f"{Fore.GREEN}PDF uploaded successfully.")
             
-            # Execute Agent with PDF content dictionary
+            # Execute Agent with uploaded file
             logger.info(f"{Fore.GREEN}Executing Agent...")
-            api_response = execute_agent(pdf_content)
+            api_response = execute_agent(uploaded_file)
             if api_response:
                 logger.info(f"{Fore.GREEN}GPT-4o-mini analysis completed successfully.")
             
