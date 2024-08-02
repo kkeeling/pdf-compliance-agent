@@ -18,37 +18,41 @@ import json
 from halo import Halo
 import google.generativeai as genai
 from google.generativeai.types import HarmCategory, HarmBlockThreshold
+import mimetypes
 
 init(autoreset=True)  # Initialize colorama with autoreset
 
-def extract_pdf_content(pdf_path):
+def upload_pdf_to_gemini(pdf_path):
     """
-    Extract raw binary content and metadata from a PDF file.
+    Upload a PDF file to the Gemini API.
     
     :param pdf_path: Path to the PDF file
-    :return: A dictionary containing extracted raw binary content and metadata
+    :return: A File object containing the uploaded file's metadata
     """
     logger = logging.getLogger('pdf_conversion_agent')
     try:
-        with open(pdf_path, 'rb') as file:
-            binary_content = file.read()
+        mime_type, _ = mimetypes.guess_type(pdf_path)
+        if mime_type != 'application/pdf':
+            raise ValueError("The file is not a PDF.")
         
-        doc = fitz.open(pdf_path)
-        content = {
-            "raw_binary": binary_content,
-            "metadata": doc.metadata,
-        }
+        with open(pdf_path, 'rb') as f:
+            file_content = f.read()
         
-        # Extract additional metadata
-        content["metadata"]["page_count"] = len(doc)
-        content["metadata"]["file_size"] = os.path.getsize(pdf_path)
-        content["metadata"]["permissions"] = doc.permissions
-        
-        logger.info(f"{Fore.GREEN}Successfully extracted raw binary content from PDF: {pdf_path}")
-        return content
+        file = genai.upload_file(file_content, mime_type=mime_type)
+        logger.info(f"{Fore.GREEN}Successfully uploaded PDF: {pdf_path}")
+        return file
     except Exception as e:
-        logger.error(f"{Fore.RED}Error extracting content from PDF: {pdf_path}. Reason: {str(e)}")
+        logger.error(f"{Fore.RED}Error uploading PDF: {pdf_path}. Reason: {str(e)}")
         return None
+
+def extract_pdf_content(pdf_path):
+    """
+    Extract content from a PDF file by uploading it to the Gemini API.
+    
+    :param pdf_path: Path to the PDF file
+    :return: A File object containing the uploaded file's metadata
+    """
+    return upload_pdf_to_gemini(pdf_path)
 
 
 def generate_pdf(content, output_path):
